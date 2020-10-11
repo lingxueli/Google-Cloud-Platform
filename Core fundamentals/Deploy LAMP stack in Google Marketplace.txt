@@ -1,0 +1,38 @@
+Step 1: Use Cloud Marketplace to deploy a LAMP stack
+In the GCP Console, on the Navigation menu (Navigation menu), click Marketplace.
+
+In the search bar, type LAMP. In the search results, click LAMP Certified by Bitnami. On the LAMP page, click Launch.
+
+Click Deploy.
+
+The status of the deployment appears in the console window: lampstack-1 is being deployed. 
+When the deployment of the infrastructure is complete, the status changes to lampstack-1 has been deployed. 
+After the software is installed, a summary of the details for the instance, including the site address, is displayed.
+
+Step 2: Verify your deployment
+
+When the deployment is complete, click the Site address link in the right pane.
+
+Alternatively, you can click Visit the site in the Get started with LAMP Certified by Bitnami section of the page. A new browser tab displays a congratulations message. This page confirms that, as part of the LAMP stack, the Apache HTTP Server is running.
+
+On the GCP Console, under Get started with LAMP Certified by Bitnami, click SSH. In a new window, a secure login shell session on your virtual machine appears.
+
+In the just-created SSH window, to change the current working directory to /opt/bitnami, execute the following command:
+
+cd /opt/bitnami
+
+To copy the phpinfo.php script from the installation directory to a publicly accessible location under the web server document root, execute the following command:
+
+sudo sh -c 'echo "<?php phpinfo(); ?>" > apache2/htdocs/phpinfo.php'
+
+The phpinfo.php script displays your PHP configuration. It is often used to verify a new PHP installation.
+
+To close the SSH window, execute the following command:
+
+exit
+
+Open a new browser tab. Type the following URL, and replace SITE_ADDRESS with the URL in the Site address field in the right pane of the lampstack page.
+
+http://SITE_ADDRESS/phpinfo.php
+
+A summary of the PHP configuration of your server is displayed.
