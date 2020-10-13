@@ -1,0 +1,150 @@
+student_00_84de09b42f79@cloudshell:~ (qwiklabs-gcp-00-c23031069fc5)$ gcloud compute zones list | grep us-central1
+us-central1-c              us-central1              UP
+us-central1-a              us-central1              UP
+us-central1-f              us-central1              UP
+us-central1-b              us-central1              UP
+
+student_00_84de09b42f79@cloudshell:~ (qwiklabs-gcp-00-c23031069fc5)$ gcloud compute zones list | head
+NAME                       REGION                   STATUS  NEXT_MAINTENANCE  TURNDOWN_DATE
+us-east1-b                 us-east1                 UP
+us-east1-c                 us-east1                 UP
+us-east1-d                 us-east1                 UP
+us-east4-c                 us-east4                 UP
+us-east4-b                 us-east4                 UP
+us-east4-a                 us-east4                 UP
+us-central1-c              us-central1              UP
+us-central1-a              us-central1              UP
+us-central1-f              us-central1              UP
+
+student_00_84de09b42f79@cloudshell:~ (qwiklabs-gcp-00-c23031069fc5)$ gcloud config set compute/zone us-central1-b
+
+Updated property [compute/zone].
+
+student_00_84de09b42f79@cloudshell:~ (qwiklabs-gcp-00-c23031069fc5)$ gcloud compute instances create "my-vm-2" \
+> --machine-type "n1-standard-1" \
+> --image-project "debian-cloud" \
+> --image "debian-9-stretch-v20190213" \
+> --subnet "default"
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-c23031069fc5/zones/us-central1-b/instances/my-vm-2].
+WARNING: Some requests generated warnings:
+ - The resource 'projects/debian-cloud/global/images/debian-9-stretch-v20190213' is deprecated. A suggested replacement is 'projects/debian-cloud/global
+/images/debian-9-stretch-v20190312'.
+NAME     ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP     STATUS
+my-vm-2  us-central1-b  n1-standard-1               10.128.0.3   35.223.238.117  RUNNING
+
+student-00-84de09b42f79@my-vm-2:~$ ping my-vm-1
+PING my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2) 56(84) bytes of data.
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=1 ttl=64 time=1.95 ms
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=2 ttl=64 time=0.335 ms
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=3 ttl=64 time=0.326 ms
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=4 ttl=64 time=0.359 ms
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=5 ttl=64 time=0.343 ms
+64 bytes from my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal (10.128.0.2): icmp_seq=6 ttl=64 time=0.355 ms
+^C
+--- my-vm-1.c.qwiklabs-gcp-00-c23031069fc5.internal ping statistics ---
+6 packets transmitted, 6 received, 0% packet loss, time 5085ms
+rtt min/avg/max/mdev = 0.326/0.612/1.957/0.601 ms
+
+student-00-84de09b42f79@my-vm-2:~$ ssh my-vm-1
+The authenticity of host 'my-vm-1 (10.128.0.2)' can't be established.
+ECDSA key fingerprint is SHA256:8NML+JcGMnAc7tENGhejrwiKnHiMt77xKvQBQBA/i8A.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'my-vm-1,10.128.0.2' (ECDSA) to the list of known hosts.
+Linux my-vm-1 4.9.0-13-amd64 #1 SMP Debian 4.9.228-1 (2020-07-05) x86_64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Creating directory '/home/student-00-84de09b42f79'.
+
+student-00-84de09b42f79@my-vm-1:~$ sudo apt-get install nginx-light -y
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following additional packages will be installed:
+  libnginx-mod-http-echo nginx-common
+Suggested packages:
+  fcgiwrap nginx-doc ssl-cert
+The following NEW packages will be installed:
+  libnginx-mod-http-echo nginx-common nginx-light
+0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+Need to get 638 kB of archives.
+After this operation, 1,476 kB of additional disk space will be used.
+Get:1 http://security.debian.org stretch/updates/main amd64 nginx-common all 1.10.3-1+deb9u5 [105 kB]
+Get:2 http://security.debian.org stretch/updates/main amd64 libnginx-mod-http-echo amd64 1.10.3-1+deb9u5 [97.4 kB]
+Get:3 http://security.debian.org stretch/updates/main amd64 nginx-light amd64 1.10.3-1+deb9u5 [436 kB]
+Fetched 638 kB in 0s (5,612 kB/s)    
+Preconfiguring packages ...
+Selecting previously unselected package nginx-common.
+(Reading database ... 41771 files and directories currently installed.)
+Preparing to unpack .../nginx-common_1.10.3-1+deb9u5_all.deb ...
+Unpacking nginx-common (1.10.3-1+deb9u5) ...
+Selecting previously unselected package libnginx-mod-http-echo.
+Preparing to unpack .../libnginx-mod-http-echo_1.10.3-1+deb9u5_amd64.deb ...
+Unpacking libnginx-mod-http-echo (1.10.3-1+deb9u5) ...
+Selecting previously unselected package nginx-light.
+Preparing to unpack .../nginx-light_1.10.3-1+deb9u5_amd64.deb ...
+Unpacking nginx-light (1.10.3-1+deb9u5) ...
+Setting up nginx-common (1.10.3-1+deb9u5) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /lib/systemd/system/nginx.service.
+Processing triggers for systemd (232-25+deb9u12) ...
+Processing triggers for man-db (2.7.6.1-2) ...
+Setting up libnginx-mod-http-echo (1.10.3-1+deb9u5) ...
+Setting up nginx-light (1.10.3-1+deb9u5) ...
+
+
+student-00-84de09b42f79@my-vm-1:~$ sudo nano /var/www/html/index.nginx-debian.html
+student-00-84de09b42f79@my-vm-1:~$ curl http://localhost/
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+Hi from Lisa Marie
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+student-00-84de09b42f79@my-vm-2:~$ curl http://my-vm-1/
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+Hi from Lisa Marie
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
