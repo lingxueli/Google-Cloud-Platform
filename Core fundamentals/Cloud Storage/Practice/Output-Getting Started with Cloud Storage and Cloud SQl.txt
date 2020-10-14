@@ -1,0 +1,17 @@
+Connected, host fingerprint: ssh-rsa 0 6F:AF:3A:CC:F2:47:DC:1C:B9:6E:7D:1F:4C:89:0C:E0:E9:6C:AA:95:04:44:F6:A3:1D:B1:37:8F:11:E3:BB:E1
+Linux bloghost 4.9.0-13-amd64 #1 SMP Debian 4.9.228-1 (2020-07-05) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Creating directory '/home/student-01-c84217e4c6a4'.
+student-01-c84217e4c6a4@bloghost:~$ cd /var/www/html
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo nano index.php
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo service apache2 restart
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo nano index.php
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo service apache2 restart
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo nano index.php
+student-01-c84217e4c6a4@bloghost:/var/www/html$ sudo service apache2 restart
