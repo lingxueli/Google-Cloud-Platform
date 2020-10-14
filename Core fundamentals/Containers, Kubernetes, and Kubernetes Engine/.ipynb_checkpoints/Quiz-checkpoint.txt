@@ -1,0 +1,28 @@
+Containers
+TOTAL POINTS 2
+1.
+Question 1
+True or false: each container has its own instance of an operating system.
+
+1 / 1 point
+
+True
+False.*
+
+Correct
+Correct! Containers start much faster than virtual machines and use fewer resources, because each container does not have its own instance of the operating system.
+
+2.
+Question 2
+Containers are loosely coupled to their environments. What does that mean? Choose all the statements that are true. (3 correct answers)
+
+1 / 1 point
+
+Deploying a containerized application consumes less resources and is less error-prone than deploying an application in virtual machines.*
+Containers package your application into equally sized components.
+Containers abstract away unimportant details of their environments.*
+Containers don't require any particular runtime binary.
+Containers are easy to move around.*
+
+Correct
+Correct!
