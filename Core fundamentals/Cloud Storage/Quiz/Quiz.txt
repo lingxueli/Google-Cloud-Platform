@@ -1,19 +1,19 @@
 Google Cloud Platform Storage Options
 LATEST SUBMISSION GRADE
-87.5%
+100%
 1.
 Question 1
 You are developing an application that transcodes large video files. Which storage option is the best choice for your application?
 
-0 / 1 point
+1 / 1 point
 
-Google Drive
+Cloud Datastore
+Cloud Storage*
 Cloud Spanner
-Cloud Storage
-Cloud Datastore*
+Google Drive
 
-Incorrect
-Review the lectures in the "Storage in the Cloud" module.
+Correct
+Correct!
 
 2.
 Question 2
