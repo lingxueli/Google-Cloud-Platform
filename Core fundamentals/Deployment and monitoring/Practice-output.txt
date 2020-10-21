@@ -1,0 +1,92 @@
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ export MY_ZONE=us-central1-a
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ gsutil cp gs://cloud-training/gcpfcoreinfra/mydeploy.yaml mydeploy.yaml
+Copying gs://cloud-training/gcpfcoreinfra/mydeploy.yaml...
+/ [1 files][  664.0 B/  664.0 B]
+Operation completed over 1 objects/664.0 B.
+
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ sed -i -e "s/PROJECT_ID/$DEVSHELL_PROJECT_ID/" mydeploy.yaml
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ sed -i -e "s/ZONE/$MY_ZONE/" mydeploy.yaml
+
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ cat mydeploy.yaml
+resources:
+- name: my-vm
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/n1-standard-1
+    metadata:
+      items:
+      - key: startup-script
+        value: "apt-get update"
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-9-stretch-v20180806
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-03-e7ffce1b99ed/global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ gcloud deployment-manager deployments create my-first-depl --config mydeploy.yaml
+The fingerprint of the deployment is b'5UselrFvBsDmM7B8btfiLQ=='
+Waiting for create [operation-1603255739016-5b22710cee592-997eba27-e1f34864]...done.
+WARNING: Create operation operation-1603255739016-5b22710cee592-997eba27-e1f34864 completed with warnings:
+---
+code: EXTERNAL_API_WARNING
+data:
+- key: resource_name
+  value: projects/debian-cloud/global/images/debian-9-stretch-v20180806
+- key: replacement_suggestion
+  value: A suggested replacement is 'projects/debian-cloud/global/images/debian-9-stretch-v20180814'.
+message: The resource 'projects/debian-cloud/global/images/debian-9-stretch-v20180806'
+  is deprecated. A suggested replacement is 'projects/debian-cloud/global/images/debian-9-stretch-v20180814'.
+NAME   TYPE                 STATE      ERRORS  INTENT
+my-vm  compute.v1.instance  COMPLETED  []
+
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ nano mydeploy.yaml
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ cat mydeploy.yaml
+resources:
+- name: my-vm
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/n1-standard-1
+    metadata:
+      items:
+      - key: startup-script
+        value: "apt-get update; apt-get install nginx-light -y"
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-9-stretch-v20180806
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-03-e7ffce1b99ed/global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+
+student_03_546ad51fa65f@cloudshell:~ (qwiklabs-gcp-03-e7ffce1b99ed)$ gcloud deployment-manager deployments update my-first-depl --config mydeploy.yaml
+The fingerprint of the deployment is b'4lmNz8Ysze0ejVN8iC6C5w=='
+Waiting for update [operation-1603255948529-5b2271d4bcde4-163bfb36-2666aad8]...done.
+Update operation operation-1603255948529-5b2271d4bcde4-163bfb36-2666aad8 completed successfully.
+NAME   TYPE                 STATE      ERRORS  INTENT
+my-vm  compute.v1.instance  COMPLETED  []
+
+student-03-546ad51fa65f@my-vm:~$ dd if=/dev/urandom | gzip -9 >> /dev/null &
+[1] 1563
+
+student-03-546ad51fa65f@my-vm:~$ curl -sSO https://dl.google.com/cloudagents/install-monitoring-agent.sh
+student-03-546ad51fa65f@my-vm:~$ sudo bash install-monitoring-agent.sh
+
+student-03-546ad51fa65f@my-vm:~$ curl -sSO https://dl.google.com/cloudagents/install-logging-agent.sh
+student-03-546ad51fa65f@my-vm:~$ sudo bash install-logging-agent.sh
+
+student-03-546ad51fa65f@my-vm:~$ kill %1
+[1]+  Terminated              dd if=/dev/urandom | gzip -9 >> /dev/null
