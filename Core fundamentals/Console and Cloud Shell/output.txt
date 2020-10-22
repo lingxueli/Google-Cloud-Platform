@@ -1,0 +1,72 @@
+Welcome to Cloud Shell! Type "help" to get started.
+Your Cloud Platform project in this session is set to qwiklabs-gcp-00-5d6bf977c796.
+Use “gcloud config set project [PROJECT_ID]” to change to a different project.
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ gsutil mb gs://lisalisalisa2
+Creating gs://lisalisalisa2/...
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ ls
+AD070119_SHARAPOVA_12.jpg  README-cloudshell.txt
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ gsutil cp AD070119_SHARAPOVA_12.jpg gs://lisalisalisa
+Copying file://AD070119_SHARAPOVA_12.jpg [Content-Type=image/jpeg]...
+/ [1 files][277.7 KiB/277.7 KiB]
+Operation completed over 1 objects/277.7 KiB.
+
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ gcloud compute regions list
+NAME                     CPUS  DISKS_GB  ADDRESSES  RESERVED_ADDRESSES  STATUS  TURNDOWN_DATE
+asia-east1               0/24  0/4096    0/8        0/8                 UP
+asia-east2               0/24  0/4096    0/8        0/8                 UP
+asia-northeast1          0/24  0/4096    0/8        0/8                 UP
+asia-northeast2          0/24  0/4096    0/8        0/8                 UP
+asia-northeast3          0/24  0/4096    0/8        0/8                 UP
+asia-south1              0/0   0/4096    0/8        0/8                 UP
+asia-southeast1          0/24  0/4096    0/8        0/8                 UP
+asia-southeast2          0/24  0/4096    0/8        0/8                 UP
+australia-southeast1     0/24  0/4096    0/8        0/8                 UP
+europe-north1            0/24  0/4096    0/8        0/8                 UP
+europe-west1             0/24  0/4096    0/8        0/8                 UP
+europe-west2             0/24  0/4096    0/8        0/8                 UP
+europe-west3             0/24  0/4096    0/8        0/8                 UP
+europe-west4             0/24  0/4096    0/8        0/8                 UP
+europe-west6             0/24  0/4096    0/8        0/8                 UP
+northamerica-northeast1  0/24  0/4096    0/8        0/8                 UP
+southamerica-east1       0/24  0/4096    0/8        0/8                 UP
+us-central1              0/24  0/4096    0/8        0/8                 UP
+us-east1                 0/24  0/4096    0/8        0/8                 UP
+us-east4                 0/24  0/4096    0/8        0/8                 UP
+us-west1                 0/24  0/4096    0/8        0/8                 UP
+us-west2                 0/24  0/4096    0/8        0/8                 UP
+us-west3                 0/24  0/4096    0/8        0/8                 UP
+us-west4                 0/24  0/4096    0/8        0/8                 UP
+
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ INFRACLASS_REGION=us-central1
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ echo $INFRACLASS_REGION
+us-central1
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ mkdir infraclass
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ touch infraclass/config
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ echo INFRACLASS_REGION=$INFRACLASS_REGION >> ~/infraclass/config
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ echo INFRACLASS_REGION=$INFRACLASS_REGION
+INFRACLASS_REGION=us-central1
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ INFRACLASS_PROJECT_ID=qwiklabs-gcp-00-5d6bf977c796
+
+Welcome to Cloud Shell! Type "help" to get started.
+Your Cloud Platform project in this session is set to qwiklabs-gcp-00-5d6bf977c796.
+Use “gcloud config set project [PROJECT_ID]” to change to a different project.
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ echo $INFRACLASS_PROJECT_ID
+
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ nano .profile
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ ls -al
+total 332
+drwxr-xr-x 8 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:22 .
+drwxr-xr-x 4 root                    root                      4096 Oct 21 20:09 ..
+-rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae 284347 Oct 21 20:13 AD070119_SHARAPOVA_12.jpg
+-rw------- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    539 Oct 21 20:22 .bash_history
+-rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    220 Apr 17  2019 .bash_logout
+-rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae   3564 Oct 13 10:57 .bashrc
+drwxr-xr-x 3 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 13 10:36 .config
+drwxr-xr-x 2 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:10 .docker
+drwxr-xr-x 2 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:11 .gsutil
+drwxr-xr-x 2 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:17 infraclass
+drwxr-xr-x 3 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:22 .local
+-rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    834 Oct 21 20:22 .profile
+-rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    913 Oct 21 20:21 README-cloudshell.txt
+drwxr-xr-x 2 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:09 .theia
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$
