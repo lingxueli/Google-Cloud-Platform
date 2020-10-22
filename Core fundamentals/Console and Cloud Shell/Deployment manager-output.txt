@@ -1,0 +1,24 @@
+Connected, host fingerprint: ssh-rsa 0 44:CC:67:BD:B0:58:2D:2B:DB:C6:C5:9B:BF:A0
+:96:34:5C:96:B1:E3:3C:97:B1:1C:CD:88:28:4B:71:0E:C8:97
+Linux jenkins-1-vm 4.19.0-11-cloud-amd64 #1 SMP Debian 4.19.146-1 (2020-09-17) x
+86_64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+       ___ _ _                   _
+      | _ |_) |_ _ _  __ _ _ __ (_)
+      | _ \ |  _| ' \/ _` | '  \| |
+      |___/_|\__|_|_|\__,_|_|_|_|_|
+  
+  *** Welcome to the Bitnami Jenkins 2.249.2-0                      ***
+  *** Documentation:  https://docs.bitnami.com/google/apps/jenkins/ ***
+  ***                 https://docs.bitnami.com/google/              ***
+  *** Bitnami Forums: https://community.bitnami.com/                ***
+Creating directory '/home/student-00-aa6d93d7ec81'.
+student-00-aa6d93d7ec81@jenkins-1-vm:~$ sudo /opt/bitnami/ctlscript.sh stop
+Stoping services..
+student-00-aa6d93d7ec81@jenkins-1-vm:~$ sudo /opt/bitnami/ctlscript.sh restart
+Restarting services..
+student-00-aa6d93d7ec81@jenkins-1-vm:~$ exit

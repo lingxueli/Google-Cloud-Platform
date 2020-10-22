@@ -69,4 +69,9 @@ drwxr-xr-x 3 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:22
 -rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    834 Oct 21 20:22 .profile
 -rw-r--r-- 1 student_00_7769a0ec89ae student_00_7769a0ec89ae    913 Oct 21 20:21 README-cloudshell.txt
 drwxr-xr-x 2 student_00_7769a0ec89ae student_00_7769a0ec89ae   4096 Oct 21 20:09 .theia
-student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$
+
+Welcome to Cloud Shell! Type "help" to get started.
+Your Cloud Platform project in this session is set to qwiklabs-gcp-00-5d6bf977c796.
+Use “gcloud config set project [PROJECT_ID]” to change to a different project.
+student_00_7769a0ec89ae@cloudshell:~ (qwiklabs-gcp-00-5d6bf977c796)$ echo $INFRACLASS_PROJECT_ID
+qwiklabs-gcp-00-5d6bf977c796
