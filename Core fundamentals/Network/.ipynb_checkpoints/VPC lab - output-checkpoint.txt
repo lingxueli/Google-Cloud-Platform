@@ -1,0 +1,157 @@
+Linux mynet-us-vm 4.19.0-11-cloud-amd64 #1 SMP Debian 4.19.146-1 (2020-09-17) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Creating directory '/home/student-02-689d0912f5b0'.
+student-02-689d0912f5b0@mynet-us-vm:~$ ping -c 3 10.132.0.2
+PING 10.132.0.2 (10.132.0.2) 56(84) bytes of data.
+64 bytes from 10.132.0.2: icmp_seq=1 ttl=64 time=99.7 ms
+64 bytes from 10.132.0.2: icmp_seq=2 ttl=64 time=98.8 ms
+64 bytes from 10.132.0.2: icmp_seq=3 ttl=64 time=98.8 ms
+
+--- 10.132.0.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 6ms
+rtt min/avg/max/mdev = 98.789/99.107/99.740/0.576 ms
+
+student-02-689d0912f5b0@mynet-us-vm:~$ ping -c 3 mynet-eu-vm
+PING mynet-eu-vm.c.qwiklabs-gcp-02-02a0bba7c39e.internal (10.132.0.2) 56(84) bytes of data.
+64 bytes from mynet-eu-vm.c.qwiklabs-gcp-02-02a0bba7c39e.internal (10.132.0.2): icmp_seq=1 ttl=64 time=106 ms
+64 bytes from mynet-eu-vm.c.qwiklabs-gcp-02-02a0bba7c39e.internal (10.132.0.2): icmp_seq=2 ttl=64 time=105 ms
+64 bytes from mynet-eu-vm.c.qwiklabs-gcp-02-02a0bba7c39e.internal (10.132.0.2): icmp_seq=3 ttl=64 time=105 ms
+
+--- mynet-eu-vm.c.qwiklabs-gcp-02-02a0bba7c39e.internal ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 4ms
+rtt min/avg/max/mdev = 104.751/105.143/105.896/0.532 ms
+
+student-02-689d0912f5b0@mynet-us-vm:~$ ping -c 3 35.233.21.154
+PING 35.233.21.154 (35.233.21.154) 56(84) bytes of data.
+64 bytes from 35.233.21.154: icmp_seq=1 ttl=56 time=101 ms
+64 bytes from 35.233.21.154: icmp_seq=2 ttl=56 time=101 ms
+64 bytes from 35.233.21.154: icmp_seq=3 ttl=56 time=101 ms
+
+--- 35.233.21.154 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 4ms
+rtt min/avg/max/mdev = 100.741/100.808/100.857/0.369 ms
+
+# Equilvalent gcloud command line to create custom VPC network: management
+
+# create VPC network
+gcloud compute networks create managementnet --project=qwiklabs-gcp-02-02a0bba7c39e --subnet-mode=custom --mtu=1460 --bgp-routing-mode=regional
+
+gcloud compute networks subnets create NAME --project=qwiklabs-gcp-02-02a0bba7c39e --range=IP_RANGE --network=managementnet --region=REGION
+
+# create a subnet for a region in this VPC network
+gcloud compute networks subnets create managementsubnet-us --project=qwiklabs-gcp-02-02a0bba7c39e --range=10.130.0.0/20 --network=managementnet --region=us-central1
+
+# gcloud command line to create custom VPC network: privatenet
+
+Welcome to Cloud Shell! Type "help" to get started.
+Your Cloud Platform project in this session is set to qwiklabs-gcp-02-02a0bba7c39e.
+Use “gcloud config set project [PROJECT_ID]” to change to a different project.
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute networks create privatenet --subnet-mode=custom
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-02a0bba7c39e/global/networks/privatenet].
+NAME        SUBNET_MODE  BGP_ROUTING_MODE  IPV4_RANGE  GATEWAY_IPV4
+privatenet  CUSTOM       REGIONAL
+
+Instances on this network will not be reachable until firewall rules
+are created. As an example, you can allow all internal traffic between
+instances as well as SSH, RDP, and ICMP by running:
+
+$ gcloud compute firewall-rules create <FIREWALL_NAME> --network privatenet --allow tcp,udp,icmp --source-ranges <IP_RANGE>
+$ gcloud compute firewall-rules create <FIREWALL_NAME> --network privatenet --allow tcp:22,tcp:3389,icmp
+
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute networks subnets create privatesubnet-us --network=privatenet --region=us-central1 --range=172.16.0.0/24
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-02a0bba7c39e/regions/us-central1/subnetworks/privatesubnet-us].
+NAME              REGION       NETWORK     RANGE
+privatesubnet-us  us-central1  privatenet  172.16.0.0/24
+
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute networks subnets create privatesubnet-eu --network=privatenet --region=europe-west1 --range=172.20.0.0/20
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-02a0bba7c39e/regions/europe-west1/subnetworks/privatesubnet-eu].
+NAME              REGION        NETWORK     RANGE
+privatesubnet-eu  europe-west1  privatenet  172.20.0.0/20
+
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute networks list
+NAME           SUBNET_MODE  BGP_ROUTING_MODE  IPV4_RANGE  GATEWAY_IPV4
+managementnet  CUSTOM       REGIONAL
+mynetwork      CUSTOM       REGIONAL
+privatenet     CUSTOM       REGIONAL
+
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute networks subnets list --sort-by=NETWORK
+
+NAME                 REGION                   NETWORK        RANGE
+managementsubnet-us  us-central1              managementnet  10.130.0.0/20
+mynetwork            us-central1              mynetwork      10.128.0.0/20
+mynetwork            europe-west1             mynetwork      10.132.0.0/20
+mynetwork            us-west1                 mynetwork      10.138.0.0/20
+mynetwork            asia-east1               mynetwork      10.140.0.0/20
+mynetwork            us-east1                 mynetwork      10.142.0.0/20
+mynetwork            asia-northeast1          mynetwork      10.146.0.0/20
+mynetwork            asia-southeast1          mynetwork      10.148.0.0/20
+mynetwork            us-east4                 mynetwork      10.150.0.0/20
+mynetwork            australia-southeast1     mynetwork      10.152.0.0/20
+mynetwork            europe-west2             mynetwork      10.154.0.0/20
+mynetwork            europe-west3             mynetwork      10.156.0.0/20
+mynetwork            southamerica-east1       mynetwork      10.158.0.0/20
+mynetwork            asia-south1              mynetwork      10.160.0.0/20
+mynetwork            northamerica-northeast1  mynetwork      10.162.0.0/20
+mynetwork            europe-west4             mynetwork      10.164.0.0/20
+mynetwork            europe-north1            mynetwork      10.166.0.0/20
+mynetwork            us-west2                 mynetwork      10.168.0.0/20
+mynetwork            asia-east2               mynetwork      10.170.0.0/20
+mynetwork            europe-west6             mynetwork      10.172.0.0/20
+mynetwork            asia-northeast2          mynetwork      10.174.0.0/20
+mynetwork            asia-northeast3          mynetwork      10.178.0.0/20
+mynetwork            us-west3                 mynetwork      10.180.0.0/20
+mynetwork            us-west4                 mynetwork      10.182.0.0/20
+mynetwork            asia-southeast2          mynetwork      10.184.0.0/20
+privatesubnet-us     us-central1              privatenet     172.16.0.0/24
+privatesubnet-eu     europe-west1             privatenet     172.20.0.0/20
+
+# Equivalant gcloud command line to create the firewall rules of VPC network: managementnet
+gcloud compute --project=qwiklabs-gcp-02-02a0bba7c39e firewall-rules create managementnet-allow-icmp-ssh-rdp --direction=INGRESS --priority=1000 --network=managementnet --action=ALLOW --rules=tcp:22,tcp:3389,icmp --source-ranges=0.0.0.0/0
+
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute firewall-rules create privatenet-allow-icmp-ssh-rdp --direction=INGRESS --priority=1000 --network=privatenet --action=ALLOW --rules=icmp,tcp:22,tcp:3389 --source-ranges=0.0.0.0/0
+Creating firewall...⠹Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-02a0bba7c39e/global/firewalls/privatenet-allow-icmp-ssh-rdp].
+Creating firewall...done.
+NAME                           NETWORK     DIRECTION  PRIORITY  ALLOW                 DENY  DISABLED
+privatenet-allow-icmp-ssh-rdp  privatenet  INGRESS    1000      icmp,tcp:22,tcp:3389        False
+
+# gcloud command line to create the firewall rules of VPC network: privatenet
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute firewall-rules list --sort-by=NETWORK
+NAME                              NETWORK        DIRECTION  PRIORITY  ALLOW                 DENY  DISABLED
+managementnet-allow-icmp-ssh-rdp  managementnet  INGRESS    1000      tcp:22,tcp:3389,icmp        False
+mynetwork-allow-icmp              mynetwork      INGRESS    65534     icmp                        False
+mynetwork-allow-internal          mynetwork      INGRESS    65534     all                         False
+mynetwork-allow-rdp               mynetwork      INGRESS    65534     tcp:3389                    False
+mynetwork-allow-ssh               mynetwork      INGRESS    65534     tcp:22                      False
+privatenet-allow-icmp-ssh-rdp     privatenet     INGRESS    1000      icmp,tcp:22,tcp:3389        False
+
+To show all fields of the firewall, please show in JSON format: --format=json
+To show all fields in table format, please see the examples in --help.
+
+# Equivalant gcloud command line to create the VM instance: managementnet-us-vm
+gcloud beta compute --project=qwiklabs-gcp-02-02a0bba7c39e instances create managementnet-us-vm --zone=us-central1-c --machine-type=f1-micro --subnet=managementsubnet-us --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=447115891890-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=debian-10-buster-v20201014 --image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-standard --boot-disk-device-name=managementnet-us-vm --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+
+# gcloud command line to create the VM instance: privatenet-us-vm
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute instances create privatenet-us-vm --zone=us-central1-c --machine-type=f1-micro --subnet=privatesubnet-us --image-family=debian-10 --image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-standard --boot-disk-device-name=privatenet-us-vm
+WARNING: You have selected a disk size of under [200GB]. This may result in poor I/O performance. For more information, see: https://developers.google.com/compute/docs/disks#performance.
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-02a0bba7c39e/zones/us-central1-c/instances/privatenet-us-vm].
+NAME              ZONE           MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+privatenet-us-vm  us-central1-c  f1-micro                   172.16.0.2   34.121.137.74  RUNNING
+student_02_689d0912f5b0@cloudshell:~ (qwiklabs-gcp-02-02a0bba7c39e)$ gcloud compute instances list --sort-by=ZONE
+NAME                 ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+mynet-eu-vm          europe-west1-c  n1-standard-1               10.132.0.2   35.233.21.154  RUNNING
+managementnet-us-vm  us-central1-c   f1-micro                    10.130.0.2   34.69.250.63   RUNNING
+mynet-us-vm          us-central1-c   n1-standard-1               10.128.0.2   34.66.203.30   RUNNING
+privatenet-us-vm     us-central1-c   f1-micro                    172.16.0.2   34.121.137.74  RUNNING
+
+# Summary
+VM instance 			Region & Zone 	Internal IP 		External IP	 	VPC network
+ managementnet-us-vm	us-central1-c	10.130.0.2 (nic0)	34.69.250.63	managementnet	 	
+ mynet-eu-vm			europe-west1-c	10.132.0.2 (nic0)	35.233.21.154	mynetwork	 	
+ mynet-us-vm			us-central1-c	10.128.0.2 (nic0)	34.66.203.30	mynetwork	 	
+ privatenet-us-vm		us-central1-c	172.16.0.2 (nic0)	34.121.137.74	privatenet	 	
