@@ -1,0 +1,57 @@
+Connected, host fingerprint: ssh-rsa 0 5C:D8:55:9D:AD:DA:94:7F:1F:40:34:1A:BA:08
+:42:38:4E:2C:00:FB:72:E0:A0:78:32:DF:7B:66:FF:14:26:01
+Linux custom-vm 4.19.0-11-cloud-amd64 #1 SMP Debian 4.19.146-1 (2020-09-17) x86_
+64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Creating directory '/home/student-04-9eceab40e415'.
+student-04-9eceab40e415@custom-vm:~$ free
+              total        used        free      shared  buff/cache   available
+Mem:       32943892      222728    32589560        8508      131604    32387228
+Swap:             0           0           0
+student-04-9eceab40e415@custom-vm:~$ sudo dmidecode -t 17
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.4 present.
+Handle 0x7000, DMI type 17, 21 bytes
+Memory Device
+        Array Handle: 0x0200
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: 16384 MB
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM 0
+        Bank Locator: Not Specified
+        Type: RAM
+        Type Detail: Synchronous
+Handle 0x7001, DMI type 17, 21 bytes
+Memory Device
+        Array Handle: 0x0200
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: 16384 MB
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM 1
+        Bank Locator: Not Specified
+        Type: RAM
+        Type Detail: Synchronous
+student-04-9eceab40e415@custom-vm:~$ nproc
+6
+student-04-9eceab40e415@custom-vm:~$ lscpu
+Architecture:        x86_64
+CPU op-mode(s):      32-bit, 64-bit
+Byte Order:          Little Endian
+Address sizes:       46 bits physical, 48 bits virtual
+CPU(s):              6
+On-line CPU(s) list: 0-5
+Thread(s) per core:  2
+Core(s) per socket:  3
+Socket(s):           1
+NUMA node(s):        1
