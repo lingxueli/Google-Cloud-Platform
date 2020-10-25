@@ -1,0 +1,83 @@
+Welcome to Cloud Shell! Type "help" to get started.
+Your Cloud Platform project in this session is set to qwiklabs-gcp-02-76c7fb6979b3.
+Use “gcloud config set project [PROJECT_ID]” to change to a different project.
+student_02_baa213c1027c@cloudshell:~ (qwiklabs-gcp-02-76c7fb6979b3)$ gcloud compute ssh vm-internal --zone us-central1-c --tunnel-through-iap
+WARNING: The private SSH key file for gcloud does not exist.
+WARNING: The public SSH key file for gcloud does not exist.
+WARNING: You do not have an SSH key for gcloud.
+WARNING: SSH keygen will be executed to generate a key.
+This tool needs to create the directory
+[/home/student_02_baa213c1027c/.ssh] before being able to generate SSH
+ keys.
+Do you want to continue (Y/n)?  Y
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/student_02_baa213c1027c/.ssh/google_compute_engine.
+Your public key has been saved in /home/student_02_baa213c1027c/.ssh/google_compute_engine.pub.
+The key fingerprint is:
+SHA256:kEl8DVwULlbjv2ryVEFhU9+cUbddbk50C6+7x7NHpHg student_02_baa213c1027c@cs-6000-devshell-vm-3ef3b418-4a8b-48fd-bdfe-bc76fcdd9d1e
+The key's randomart image is:
++---[RSA 2048]----+
+|     ....=*.=+..B|
+|     ..oo+.+ .o=@|
+|      +.o o .  =O|
+|       o . . ..+.|
+|        S   oo o.|
+|           ...E .|
+|          . .o.. |
+|        ....  .+.|
+|         +o  ...+|
++----[SHA256]-----+
+Warning: Permanently added 'compute.6082584943630306262' (ECDSA) to the list of known hosts.
+Linux vm-internal 4.19.0-11-cloud-amd64 #1 SMP Debian 4.19.146-1 (2020-09-17) x86_64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Creating directory '/home/student-02-baa213c1027c'.
+
+# When VM doesn't have external IP, they can't be reached by the internet.
+student-02-baa213c1027c@vm-internal:~$ ping -c 2 www.google.com
+PING www.google.com (209.85.145.104) 56(84) bytes of data.
+--- www.google.com ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 30ms
+student-02-baa213c1027c@vm-internal:~$ exit
+logout
+Connection to compute.6082584943630306262 closed.
+student_02_baa213c1027c@cloudshell:~ (qwiklabs-gcp-02-76c7fb6979b3)$
+
+# copy command issued from cloud shell (it has public ip)
+student_02_baa213c1027c@cloudshell:~ (qwiklabs-gcp-02-76c7fb6979b3)$ gsutil cp gs://cloud-training/gcpnet/private/access.svg gs://lisalisa1024
+Copying gs://cloud-training/gcpnet/private/access.svg [Content-Type=image/svg+xml]...
+/ [1 files][ 24.8 KiB/ 24.8 KiB]
+Operation completed over 1 objects/24.8 KiB.
+
+# copy command issued from cloud shell
+student_02_baa213c1027c@cloudshell:~ (qwiklabs-gcp-02-76c7fb6979b3)$ gsutil cp gs://lisalisa1024/*.svg .
+Copying gs://lisalisa1024/access.svg...
+/ [1 files][ 24.8 KiB/ 24.8 KiB]
+Operation completed over 1 objects/24.8 KiB.
+
+# copy command issued from VM without external IP. No access to the internet neither to the bucket.
+student-02-baa213c1027c@vm-internal:~$ gsutil cp gs://lisalisa1024/*.svg .
+^CCaught CTRL-C (signal 2) - exiting
+
+# after turning on the Private Cloud Access, VM can access Google APIs and services without anexternal IP.
+student-02-baa213c1027c@vm-internal:~$ gsutil cp gs://lisalisa1024/*.svg .
+Copying gs://lisalisa1024/access.svg...
+/ [1 files][ 24.8 KiB/ 24.8 KiB]
+Operation completed over 1 objects/24.8 KiB.
+
+# cloud shell can get update from internet
+student_02_baa213c1027c@cloudshell:~ (qwiklabs-gcp-02-76c7fb6979b3)$ sudo apt-get update                                                                                 Reading package lists... Done
+
+# VM tithout external IP cannot get update from internet. Only Google Cloud packages gets updated
+student-02-baa213c1027c@vm-internal:~$ sudo apt-get update
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+
+# After Cloud NAT is set, update is successful
+# Only outbound traffic is allowed, not inbound by default
+student-02-baa213c1027c@vm-internal:~$ sudo apt-get update
+Reading package lists... Done
