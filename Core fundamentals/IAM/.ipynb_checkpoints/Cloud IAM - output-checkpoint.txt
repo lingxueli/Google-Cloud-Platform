@@ -1,0 +1,20 @@
+# Because you connected via SSH to the instance, you can "act as the service account," essentially assuming the same permissions
+
+# To list instances in a project, you need to grant the compute.instance.list permission. 
+# Because the service account did not have this permission, you could not list instances running in the project
+student-02-f28262c4810c@demoiam:~$ gcloud compute instances list
+ERROR: (gcloud.compute.instances.list) Some requests did not succeed:
+ - Required 'compute.zones.list' permission for 'projects/qwiklabs-gcp-02-5486f3d44e64'
+
+# The service account the instance has the Storage Viewer role, which permits downloading objects from GCS buckets
+student-02-f28262c4810c@demoiam:~$ gsutil cp gs://qwiklabs-gcp-02-5486f3d44e64/sample.txt .
+Copying gs://qwiklabs-gcp-02-5486f3d44e64/sample.txt...
+/ [1 files][423.5 KiB/423.5 KiB]                                                
+Operation completed over 1 objects/423.5 KiB.                                    
+
+student-02-f28262c4810c@demoiam:~$ mv sample.txt sample2.txt
+
+# It did not have permission to write objects, so you got a "403 access denied" message.
+student-02-f28262c4810c@demoiam:~$ gsutil cp sample2.txt gs://qwiklabs-gcp-02-5486f3d44e64
+Copying file://sample2.txt [Content-Type=text/plain]...
+AccessDeniedException: 403 read-bucket-objects@qwiklabs-gcp-02-5486f3d44e64.iam.gserviceaccount.com does not have storage.objects.create access to qwiklabs-gcp-02-5486f3d44e64/sample2.txt.
