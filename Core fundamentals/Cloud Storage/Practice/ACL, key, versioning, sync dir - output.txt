@@ -1,0 +1,277 @@
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ export BUCKET_NAME_1=qwiklabs-gcp-03-01408b2b2fc2
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ echo $BUCKET_NAME_1
+qwiklabs-gcp-03-01408b2b2fc2
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ curl \
+> http://hadoop.apache.org/docs/current/\
+> hadoop-project-dist/hadoop-common/\
+> ClusterSetup.html > setup.html
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 58007  100 58007    0     0   100k      0 --:--:-- --:--:-- --:--:--  100k
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cp setup.html setup2.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cp setup.html setup3.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp setup.html gs://$BUCKET_NAME_1/
+Copying file://setup.html [Content-Type=text/html]...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+
+# ACL offers finer grainer control of the accessibility
+# IAM defines the accessbility of bucket. ACL defines the accessibility of the object
+# default ACL of the object
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil acl get gs://$BUCKET_NAME_1/setup.html  > acl.txt
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cat acl.txt
+[
+  {
+    "entity": "project-owners-370157818230",
+    "projectTeam": {
+      "projectNumber": "370157818230",
+      "team": "owners"
+    },
+    "role": "OWNER"
+  },
+  {
+    "entity": "project-editors-370157818230",
+    "projectTeam": {
+      "projectNumber": "370157818230",
+      "team": "editors"
+    },
+    "role": "OWNER"
+  },
+  {
+    "entity": "project-viewers-370157818230",
+    "projectTeam": {
+      "projectNumber": "370157818230",
+      "team": "viewers"
+    },
+    "role": "READER"
+  },
+  {
+    "email": "student-03-2222557e8a92@qwiklabs.net",
+    "entity": "user-student-03-2222557e8a92@qwiklabs.net",
+    "role": "OWNER"
+  }
+]
+
+# set ACL: private object
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil acl set private gs://$BUCKET_NAME_1/setup.html
+Setting ACL on gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html...
+/ [1 objects]
+Operation completed over 1 objects.
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil acl get gs://$BUCKET_NAME_1/setup.html  > acl2.txt
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cat acl2.txt
+[
+  {
+    "email": "student-03-2222557e8a92@qwiklabs.net",
+    "entity": "user-student-03-2222557e8a92@qwiklabs.net",
+    "role": "OWNER"
+  }
+]
+
+# set ACL: readable for all users
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil acl ch -u AllUsers:R gs://$BUCKET_NAME_1/setup.html
+Updated ACL on gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil acl get gs://$BUCKET_NAME_1/setup.html  > acl3.txt
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cat acl3.txt
+[
+  {
+    "email": "student-03-2222557e8a92@qwiklabs.net",
+    "entity": "user-student-03-2222557e8a92@qwiklabs.net",
+    "role": "OWNER"
+  },
+  {
+    "entity": "allUsers",
+    "role": "READER"
+  }
+]
+
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ rm setup.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ ls
+acl2.txt  acl3.txt  acl.txt  README-cloudshell.txt  setup2.html  setup3.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp gs://$BUCKET_NAME_1/setup.html setup.html
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+
+# Customer-supplied encryption keys (CSEK)
+# create a key: AES-256 base-64 key
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ python3 -c 'import base64; import os; print(base64.encodebytes(os.urandom(32)))'
+b'67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=\n'
+
+# create .boto file: gsutil configuration file for encryption controls
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil config -n
+This command will create a boto config file at
+/home/student_03_2222557e8a92/.boto containing your credentials, based
+on your responses to the following questions.
+
+Boto config file "/home/student_03_2222557e8a92/.boto" created. If you
+need to use a proxy to access the Internet please see the instructions
+in that file.
+
+# locate the boto file
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil version -l
+gsutil version: 4.53
+checksum: 8f91848c753a09585745117ecf306e9f (OK)
+boto version: 2.49.0
+python version: 3.7.3 (default, Jul 25 2020, 13:03:44) [GCC 8.3.0]
+OS: Linux 5.4.49+
+multiprocessing available: True
+using cloud sdk: True
+pass cloud sdk credentials to gsutil: True
+config path(s): /home/student_03_2222557e8a92/.boto
+gsutil path: /usr/lib/google-cloud-sdk/bin/gsutil
+compiled crcmod: True
+installed via package manager: False
+editable install: False
+
+# feed CSEK to boto file
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano .boto
+encryption_key=67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=
+
+# upload the setup files (encrypted) to cloud storage
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp setup2.html gs://$BUCKET_NAME_1/
+Copying file://setup2.html [Content-Type=text/html]...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp setup3.html gs://$BUCKET_NAME_1/
+Copying file://setup3.html [Content-Type=text/html]...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+
+# download encrypted files
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ rm setup*
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp gs://$BUCKET_NAME_1/setup* ./
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html...
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup2.html...
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup3.html...
+/ [3 files][169.9 KiB/169.9 KiB]
+Operation completed over 3 objects/169.9 KiB.
+
+# check the integrity of files
+cat setup.html
+cat setup2.html
+cat setup3.html
+
+# Rotate CSEK keys
+# Move the current CSEK encrypt key to decrypt key
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano .boto
+#encryption_key=67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=
+decryption_key1=67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=
+
+# generate a new key and feed it to boto file
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ python3 -c 'import base64; import os; print(base64.encodebytes(os.urandom(32)))'
+b'3U5W+X753OZj82MVXifB/3+1/XOWn0QJttkV9UmJBVU=\n'
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano .boto
+encryption_key=3U5W+X753OZj82MVXifB/3+1/XOWn0QJttkV9UmJBVU=
+decryption_key1=67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=
+
+# rewrite the file by new encryption key
+# before the new encryption, decrypt it using the old key
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil rewrite -k gs://$BUCKET_NAME_1/setup2.html
+/ [1 files][ 56.6 KiB/ 56.6 KiB]                                                 0.0 B/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+
+# test badly rotated key
+# remove decryption key
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano .boto
+#decryption_key1=67laKoDeDgSCLpoQYUTfMhDrrZfgSmtMTNbZS0dldms=
+# file access is good when rotated key well
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp  gs://$BUCKET_NAME_1/setup2.html recover2.html
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup2.html...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+# bad file access when rotated key poorly
+# setup3.html was not rewritten with the new key; it can no longer be decrypted; and the copy will fail
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp  gs://$BUCKET_NAME_1/setup3.html recover3.html
+gslib.cloud_api.EncryptionException: Missing decryption key with SHA256 hash b'FHZRd78MOt5VwNHnTyRRx54Rv52UQNvVKrdF6ffJgxw='. No decryption key matches object gs://qwiklabs-gcp-03-01408b2b2fc2/setup3.html
+
+# lifecycle management
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil lifecycle get gs://$BUCKET_NAME_1
+gs://qwiklabs-gcp-03-01408b2b2fc2/ has no lifecycle configuration.
+# create a JSON lifecycle policy file
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano life.json
+{
+  "rule":
+  [
+    {
+      "action": {"type": "Delete"},
+      "condition": {"age": 31}
+    }
+  ]
+}
+# set the policy
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil lifecycle set life.json gs://$BUCKET_NAME_1
+Setting lifecycle configuration on gs://qwiklabs-gcp-03-01408b2b2fc2/...
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil lifecycle get gs://$BUCKET_NAME_1
+{"rule": [{"action": {"type": "Delete"}, "condition": {"age": 31}}]}
+
+# bucket versioning
+# versioning is disabled now
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil versioning get gs://$BUCKET_NAME_1
+gs://qwiklabs-gcp-03-01408b2b2fc2: Suspended
+
+# enable versioning
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil versioning set on gs://$BUCKET_NAME_1
+Enabling versioning for gs://qwiklabs-gcp-03-01408b2b2fc2/...
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil versioning get gs://$BUCKET_NAME_1
+gs://qwiklabs-gcp-03-01408b2b2fc2: Enabled
+
+# create several versions of the sample file in the bucket
+# note the size of the file for later reference
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ ls -al setup.html
+-rw-r--r-- 1 student_03_2222557e8a92 student_03_2222557e8a92 58007 Oct 26 23:27 setup.html
+
+# delete any 5 lines from setup.html to change the size of the file.
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano setup.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp -v setup.html gs://$BUCKET_NAME_1
+Copying file://setup.html [Content-Type=text/html]...
+Created: gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603777696951021
+Operation completed over 1 objects/56.4 KiB.
+
+# delete another 5 lines from setup.html to change the size of the file.
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ nano setup.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp -v setup.html gs://$BUCKET_NAME_1
+Copying file://setup.html [Content-Type=text/html]...
+Created: gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603777743717039
+Operation completed over 1 objects/56.1 KiB.
+
+# list all versions: from oldest version to newest
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil ls -a gs://$BUCKET_NAME_1/setup.html
+gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603775230770997
+gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603777696951021
+gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603777743717039
+
+# download the oldest version and recover
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ export VERSION_NAME=gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603775230770997
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ echo $VERSION_NAME
+gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603775230770997
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil cp $VERSION_NAME recovered.txt
+Copying gs://qwiklabs-gcp-03-01408b2b2fc2/setup.html#1603775230770997...
+/ [1 files][ 56.6 KiB/ 56.6 KiB]
+Operation completed over 1 objects/56.6 KiB.
+
+# verify the recovery is successful
+# notice the size of the revovery file is the same of the original version
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ ls -al setup.html
+-rw-r--r-- 1 student_03_2222557e8a92 student_03_2222557e8a92 57483 Oct 26 23:48 setup.html
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ ls -al recovered.txt
+-rw-r--r-- 1 student_03_2222557e8a92 student_03_2222557e8a92 58007 Oct 26 23:53 recovered.txt
+
+# synchronize a directory to a bucket
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ mkdir firstlevel
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ mkdir ./firstlevel/secondlevel
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cp setup.html firstlevel
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ cp setup.html firstlevel/secondlevel
+
+# sync the firstlevel directory on the VM with your bucket, run the following command:
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil rsync -r ./firstlevel gs://$BUCKET_NAME_1/firstlevel
+Building synchronization state...
+Starting synchronization...
+Copying file://./firstlevel/secondlevel/setup.html [Content-Type=text/html]...
+Copying file://./firstlevel/setup.html [Content-Type=text/html]...
+/ [2 files][112.3 KiB/112.3 KiB]
+Operation completed over 2 objects/112.3 KiB.
+student_03_2222557e8a92@cloudshell:~ (qwiklabs-gcp-03-01408b2b2fc2)$ gsutil ls -r gs://$BUCKET_NAME_1/firstlevel
+gs://qwiklabs-gcp-03-01408b2b2fc2/firstlevel/:
+gs://qwiklabs-gcp-03-01408b2b2fc2/firstlevel/setup.html
+gs://qwiklabs-gcp-03-01408b2b2fc2/firstlevel/secondlevel/:
+gs://qwiklabs-gcp-03-01408b2b2fc2/firstlevel/secondlevel/setup.html
