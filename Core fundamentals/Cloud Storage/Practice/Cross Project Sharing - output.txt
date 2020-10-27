@@ -1,0 +1,30 @@
+student-03-2222557e8a92@crossproject:~$ export BUCKET_NAME_2=qwiklabs-gcp-03-fdfa667bb8eb
+student-03-2222557e8a92@crossproject:~$ echo $BUCKET_NAME_2
+qwiklabs-gcp-03-fdfa667bb8eb
+student-03-2222557e8a92@crossproject:~$ export FILE_NAME=aws.txt
+student-03-2222557e8a92@crossproject:~$ echo $FILE_NAME
+aws.txt
+
+# sharing not configred
+student-03-2222557e8a92@crossproject:~$ gsutil ls gs://$BUCKET_NAME_2/
+AccessDeniedException: 403 370157818230-compute@developer.gserviceaccount.com does not have storage.objects.list access to the Google Cloud Storage bucket.
+
+# authorize the VM
+# 
+# upload key to this VM
+# this key will give VM the access to the shared bucket in the other project
+# this key is generated from the service account of the bucket
+student-03-2222557e8a92@crossproject:~$ ls
+credentials.json
+student-03-2222557e8a92@crossproject:~$ gcloud auth activate-service-account --key-file credentials.json
+Activated service account credentials for: [cross-project-storage@qwiklabs-gcp-03-fdfa667bb8eb.iam.gserviceaccount.c
+om]
+
+# verify the bucket is accessible
+student-03-2222557e8a92@crossproject:~$ gsutil ls gs://$BUCKET_NAME_2/
+gs://qwiklabs-gcp-03-fdfa667bb8eb/aws.txt
+student-03-2222557e8a92@crossproject:~$ gsutil cat gs://$BUCKET_NAME_2/$FILE_NAME
+student-03-2222557e8a92@crossproject:~$ gsutil cp credentials.json gs://$BUCKET_NAME_2/
+Copying file://credentials.json [Content-Type=application/json]...
+/ [1 files][  2.3 KiB/  2.3 KiB]                                                
+Operation completed over 1 objects/2.3 KiB.                                      
