@@ -1,0 +1,34 @@
+# Set up proxy to secure the external connection to Cloud SQL database
+# download proxy service
+student-01-bf04f79f4dce@wordpress-europe-proxy:~$ wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy && chmod +x cloud_sql_proxy
+--2020-10-28 04:35:51--  https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
+Resolving dl.google.com (dl.google.com)... 64.233.167.136, 64.233.167.91, 64.233.167.190, ...
+Connecting to dl.google.com (dl.google.com)|64.233.167.136|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 16361206 (16M) [application/octet-stream]
+Saving to: ‘cloud_sql_proxy’
+
+cloud_sql_proxy              100%[==============================================>]  15.60M  --.-KB/s    in 0.08s   
+
+2020-10-28 04:35:51 (192 MB/s) - ‘cloud_sql_proxy’ saved [16361206/16361206]
+
+student-01-bf04f79f4dce@wordpress-europe-proxy:~$ export SQL_CONNECTION=qwiklabs-gcp-01-94633506fb5e:us-central1:wordpress-db
+student-01-bf04f79f4dce@wordpress-europe-proxy:~$ echo $SQL_CONNECTION
+qwiklabs-gcp-01-94633506fb5e:us-central1:wordpress-db
+
+# activate the proxy connection to Cloud SQL database, send it to the background
+student-01-bf04f79f4dce@wordpress-europe-proxy:~$ ./cloud_sql_proxy -instances=$SQL_CONNECTION=tcp:3306 &
+[1] 14264
+2020/10/28 04:40:09 Rlimits for file descriptors set to {&{8500 1048576}}
+2020/10/28 04:40:12 Listening on 127.0.0.1:3306 for qwiklabs-gcp-01-94633506fb5e:us-central1:wordpress-db
+2020/10/28 04:40:12 Ready for new connections
+
+# configure Wordpress application (on the proxy server)
+# this application communicates with SQL through proxy
+# find the external IP address of the virtual machine
+student-01-bf04f79f4dce@wordpress-europe-proxy:~$ curl -H "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip && echo
+35.195.193.144
+# Set database IP as 172.0.0.1, proxy listens on this address and redirect the traffic to Cloud SQL server
+
+# configure Wordpress application on another private server (a server located in the same VPC, same region as SQL)
+# Set database IP as the internal IP of this private server
