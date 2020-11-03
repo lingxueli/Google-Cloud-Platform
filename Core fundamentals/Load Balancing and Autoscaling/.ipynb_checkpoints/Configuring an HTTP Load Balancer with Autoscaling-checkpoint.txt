@@ -52,12 +52,100 @@ Nov 03 04:37:59 webserver systemd[1]: Started The Apache HTTP Server.
 
 Tip 2:
 
-Steps to create a customed image:
+How to create a customed image?
 
 Create the VM -> Customize the VM -> Delete the VM but keep the boot disk -> Create an image from the disk -> Delete the disk
 
-Then you have created a custom image that multiple identical webservers can be started from.
+Now you have created a custom image that multiple identical webservers can be started from.
+
+Tip 3:
+
+A managed instance group uses an instance template to create a group of identical instances. Use these to create the backends of the HTTP load balancer.
+
+An instance template is an API resource that you can use to create VM instances and managed instance groups. Instance templates define the machine type, boot disk image, subnet, labels, and other instance properties.
+
+In this lab, you create the instance template from the customized image.
+
+Tip 4:
+
+Managed instance groups offer autoscaling capabilities that allow you to automatically add or remove instances from a managed instance group based on increases or decreases in load. Autoscaling helps your applications gracefully handle increases in traffic and reduces cost when the need for resources is lower. You just define the autoscaling policy, and the autoscaler performs automatic scaling based on the measured load.
+
+Tip 5:
+
+Managed instance group health checks proactively signal to delete and recreate instances that become unhealthy.
+
+Tip 6:
+
+Accessing the HTTP load balancer might take a couple of minutes. In the meantime, you might get a 404 or 502 error. Keep trying until you see the page of one of the backends.
+
+Even though the backend is ready, google takes longer time to configure the front end of the load balancer. Global load balancer needs to be reachable from everywhere. That's why it takes so long.
+
+Tip 7:
+
+Request comes from us-west1. Backend service are at europe-west1 and us-central1.
+
+Because us-west1 is closer to us-central1 than to europe-west1, traffic should be forwarded only to us-central1-mig (unless the load is too high).
+
+At first, traffic should just be directed to us-central1-mig, but as the RPS increases, traffic is also directed to europe-west1-mig. This demonstrates that by default traffic is forwarded to the closest backend, but if the load is very high, traffic can be distributed across the backends.
+
+Stress testing:
+
+# Place a load on the load balancer 
+googleod526386_student@stress-test:~$ export LB_IP=34.120.102.7
+googleod526386_student@stress-test:~$ echo $LB_IP
+34.120.102.7
+
+googleod526386_student@stress-test:~$ ab -n 500000 -c 1000 http://$LB_IP/
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+Benchmarking 34.120.102.7 (be patient)
+Completed 50000 requests
+Completed 100000 requests
+Completed 150000 requests
+Completed 200000 requests
+Completed 250000 requests
+Completed 300000 requests
+Completed 350000 requests
+Completed 400000 requests
+Completed 450000 requests
+Completed 500000 requests
+Finished 500000 requests
 
 
+Server Software:        
+Server Hostname:        34.120.102.7
+Server Port:            80
 
+Document Path:          /
+Document Length:        1561 bytes
 
+Concurrency Level:      1000
+Time taken for tests:   27.474 seconds
+Complete requests:      500000
+Failed requests:        0
+Non-2xx responses:      500000
+Total transferred:      858000000 bytes
+HTML transferred:       780500000 bytes
+Requests per second:    18199.28 [#/sec] (mean)
+Time per request:       54.947 [ms] (mean)
+Time per request:       0.055 [ms] (mean, across all concurrent requests)
+Transfer rate:          30498.00 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        1   25   6.1     25    1044
+Processing:    10   30   4.7     30     272
+Waiting:        1   20   5.2     20     263
+Total:         24   55   5.9     55    1074
+
+Percentage of the requests served within a certain time (ms)
+  50%     55
+  66%     55
+  75%     56
+  80%     56
+  90%     59
+  95%     61
+  98%     63
+  99%     66
+ 100%   1074 (longest request)

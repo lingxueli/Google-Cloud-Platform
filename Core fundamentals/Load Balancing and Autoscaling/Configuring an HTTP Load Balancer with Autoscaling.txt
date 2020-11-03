@@ -84,6 +84,10 @@ Tip 7:
 
 Request comes from us-west1. Backend service are at europe-west1 and us-central1.
 
+Because us-west1 is closer to us-central1 than to europe-west1, traffic should be forwarded only to us-central1-mig (unless the load is too high).
+
+At first, traffic should just be directed to us-central1-mig, but as the RPS increases, traffic is also directed to europe-west1-mig. This demonstrates that by default traffic is forwarded to the closest backend, but if the load is very high, traffic can be distributed across the backends.
+
 Stress testing:
 
 # Place a load on the load balancer 
@@ -145,9 +149,3 @@ Percentage of the requests served within a certain time (ms)
   98%     63
   99%     66
  100%   1074 (longest request)
-
-
-Because us-west1 is closer to us-central1 than to europe-west1, traffic should be forwarded only to us-central1-mig (unless the load is too high).
-
-At first, traffic should just be directed to us-central1-mig, but as the RPS increases, traffic is also directed to europe-west1-mig. This demonstrates that by default traffic is forwarded to the closest backend, but if the load is very high, traffic can be distributed across the backends.
-

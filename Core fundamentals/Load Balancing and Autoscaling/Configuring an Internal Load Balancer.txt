@@ -1,0 +1,38 @@
+Configuring an Internal Load Balancer
+
+Overview
+Google Cloud offers Internal Load Balancing for your TCP/UDP-based traffic. Internal Load Balancing enables you to run and scale your services behind a private load balancing IP address that is accessible only to your internal virtual machine instances.
+
+In this lab, you create two managed instance groups in the same region. Then you configure and test an internal load balancer with the instances groups as the backends, as shown in the network diagram.
+
+Objectives
+In this lab, you learn how to perform the following tasks:
+
+Create internal traffic and health check firewall rules
+Create a NAT configuration using Cloud Router
+Configure two instance templates
+Create two managed instance groups
+Configure and test an internal load balancer
+
+Tip 1:
+
+Startup Script to customize index.html. Apply this startup script when create the instance template.
+
+#! /bin/bash
+
+apt-get update 
+apt-get install -y apache2 php
+apt-get install -y wget
+cd /var/www/html
+rm index.html -f
+rm index.php -f
+wget https://storage.googleapis.com/cloud-training/gcpnet/ilb/index.php
+META_REGION_STRING=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google")
+REGION=`echo "$META_REGION_STRING" | awk -F/ '{print $4}'`
+sed -i "s|region-here|$REGION|" index.php
+
+# Client receives http response from the load balancer backend (us-central1-a/b)
+student-01-d3dba80f4a57@utility-vm:~$ curl 10.10.20.2
+<h1>Internal Load Balancing Lab</h1><h2>Client IP</h2>Your IP address : 10.10.20.50<h2>Hostname</h2>Server Hostname: instance-group-1-bkww<h2>Server Location</h2>Region and Zone: us-central1-a
+student-01-d3dba80f4a57@utility-vm:~$ curl 10.10.30.2
+<h1>Internal Load Balancing Lab</h1><h2>Client IP</h2>Your IP address : 10.10.20.50<h2>Hostname</h2>Server Hostname: instance-group-2-s0gq<h2>Server Location</h2>Region and Zone: us-central1-b
