@@ -1,0 +1,153 @@
+Configuring an HTTP Load Balancer with Autoscaling
+
+Overview
+Google Cloud HTTP(S) load balancing is implemented at the edge of Google's network in Google's points of presence (POP) around the world. User traffic directed to an HTTP(S) load balancer enters the POP closest to the user and is then load-balanced over Google's global network to the closest backend that has sufficient available capacity.
+
+In this lab, you configure an HTTP load balancer as shown in the diagram. Then, you stress test the load balancer to demonstrate global load balancing and autoscaling.
+
+Objectives
+In this lab, you learn how to perform the following tasks:
+
+Create a health check firewall rule
+Create a NAT configuration using Cloud Router
+Create a custom image for a web server
+Create an instance template based on the custom image
+Create two managed instance groups
+Configure an HTTP load balancer with IPv4 and IPv6
+Stress test an HTTP load balancer
+
+https://googlecoursera.qwiklabs.com/focuses/12207799?parent=lti_session
+
+Tip 1:
+
+Reset VM will stop and reboot the machine. It keeps the same IPs and the same persistent boot disk, but memory is wiped. Therefore, if the Apache service is available after the reset, the update-rc(start on boot) command was successful.
+
+# install Apache
+sudo apt-get update
+sudo apt-get install -y apache2
+
+# start Apache
+sudo service apache2 start
+
+# set Apache to start on boot
+sudo update-rc.d apache2 enable
+
+# check status
+googleod526386_student@webserver:~$ sudo service apache2 status
+● apache2.service - The Apache HTTP Server
+   Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2020-11-03 04:37:59 UTC; 3min 11s ago
+     Docs: https://httpd.apache.org/docs/2.4/
+  Process: 365 ExecStart=/usr/sbin/apachectl start (code=exited, status=0/SUCCESS)
+ Main PID: 506 (apache2)
+    Tasks: 55 (limit: 627)
+   Memory: 13.0M
+   CGroup: /system.slice/apache2.service
+           ├─506 /usr/sbin/apache2 -k start
+           ├─508 /usr/sbin/apache2 -k start
+           └─509 /usr/sbin/apache2 -k start
+
+Nov 03 04:37:58 webserver systemd[1]: Starting The Apache HTTP Server...
+Nov 03 04:37:59 webserver systemd[1]: Started The Apache HTTP Server.
+
+Tip 2:
+
+How to create a customed image?
+
+Create the VM -> Customize the VM -> Delete the VM but keep the boot disk -> Create an image from the disk -> Delete the disk
+
+Now you have created a custom image that multiple identical webservers can be started from.
+
+Tip 3:
+
+A managed instance group uses an instance template to create a group of identical instances. Use these to create the backends of the HTTP load balancer.
+
+An instance template is an API resource that you can use to create VM instances and managed instance groups. Instance templates define the machine type, boot disk image, subnet, labels, and other instance properties.
+
+In this lab, you create the instance template from the customized image.
+
+Tip 4:
+
+Managed instance groups offer autoscaling capabilities that allow you to automatically add or remove instances from a managed instance group based on increases or decreases in load. Autoscaling helps your applications gracefully handle increases in traffic and reduces cost when the need for resources is lower. You just define the autoscaling policy, and the autoscaler performs automatic scaling based on the measured load.
+
+Tip 5:
+
+Managed instance group health checks proactively signal to delete and recreate instances that become unhealthy.
+
+Tip 6:
+
+Accessing the HTTP load balancer might take a couple of minutes. In the meantime, you might get a 404 or 502 error. Keep trying until you see the page of one of the backends.
+
+Even though the backend is ready, google takes longer time to configure the front end of the load balancer. Global load balancer needs to be reachable from everywhere. That's why it takes so long.
+
+Tip 7:
+
+Request comes from us-west1. Backend service are at europe-west1 and us-central1.
+
+Stress testing:
+
+# Place a load on the load balancer 
+googleod526386_student@stress-test:~$ export LB_IP=34.120.102.7
+googleod526386_student@stress-test:~$ echo $LB_IP
+34.120.102.7
+
+googleod526386_student@stress-test:~$ ab -n 500000 -c 1000 http://$LB_IP/
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+Benchmarking 34.120.102.7 (be patient)
+Completed 50000 requests
+Completed 100000 requests
+Completed 150000 requests
+Completed 200000 requests
+Completed 250000 requests
+Completed 300000 requests
+Completed 350000 requests
+Completed 400000 requests
+Completed 450000 requests
+Completed 500000 requests
+Finished 500000 requests
+
+
+Server Software:        
+Server Hostname:        34.120.102.7
+Server Port:            80
+
+Document Path:          /
+Document Length:        1561 bytes
+
+Concurrency Level:      1000
+Time taken for tests:   27.474 seconds
+Complete requests:      500000
+Failed requests:        0
+Non-2xx responses:      500000
+Total transferred:      858000000 bytes
+HTML transferred:       780500000 bytes
+Requests per second:    18199.28 [#/sec] (mean)
+Time per request:       54.947 [ms] (mean)
+Time per request:       0.055 [ms] (mean, across all concurrent requests)
+Transfer rate:          30498.00 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        1   25   6.1     25    1044
+Processing:    10   30   4.7     30     272
+Waiting:        1   20   5.2     20     263
+Total:         24   55   5.9     55    1074
+
+Percentage of the requests served within a certain time (ms)
+  50%     55
+  66%     55
+  75%     56
+  80%     56
+  90%     59
+  95%     61
+  98%     63
+  99%     66
+ 100%   1074 (longest request)
+
+
+Because us-west1 is closer to us-central1 than to europe-west1, traffic should be forwarded only to us-central1-mig (unless the load is too high).
+
+At first, traffic should just be directed to us-central1-mig, but as the RPS increases, traffic is also directed to europe-west1-mig. This demonstrates that by default traffic is forwarded to the closest backend, but if the load is very high, traffic can be distributed across the backends.
+
