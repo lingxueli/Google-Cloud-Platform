@@ -1,0 +1,164 @@
+Automating the Deployment of Infrastructure Using Deployment Manager
+
+Overview
+Deployment Manager is an infrastructure deployment service that automates the creation and management of Google Cloud resources. Write flexible template and configuration files and use them to create deployments that have a variety of Cloud Platform services, such as Cloud Storage, Compute Engine, and Cloud SQL, configured to work together.
+
+In this lab, you create a Deployment Manager configuration with a template to automate the deployment of Google Cloud infrastructure. Specifically, you deploy one auto mode network with a firewall rule and two VM instances, as shown in the diagram.
+
+diagram.png
+
+Objectives
+In this lab, you learn how to perform the following tasks:
+
+Create a configuration for an auto mode network
+
+Create a configuration for a firewall rule
+
+Create a template for VM instances
+
+Create and deploy a configuration
+
+Verify the deployment of a configuration
+
+Tip 1:
+
+This base configuration is a great starting point for any Google Cloud resource. The name field allows you to name the resource, and the type field allows you to specify the Google Cloud resource that you want to create. You can also define properties, but these are optional for some resources.
+
+resources:
+# Create the auto-mode network
+- name: [RESOURCE_NAME]
+  type: [RESOURCE_TYPE]
+  properties:
+    #RESOURCE properties go here
+
+Tip 2:
+To get a list of all available network resource types in Google Cloud, run the following command in Cloud Shell:
+
+gcloud deployment-manager types list | grep network
+
+The output should look like this:
+
+compute.beta.subnetwork
+compute.alpha.subnetwork
+compute.v1.subnetwork
+compute.beta.network
+compute.v1.network
+compute.alpha.network
+
+For a normal Deployment Manager configuration, which subnetwork resource type would you use? (assume these three options are available)
+
+compute.beta.subnetwork
+---compute.v1.subnetwork---
+compute.alpha.subnetwork
+
+alpha is the early testing stage
+beta is the later testing stage, made available for developers
+v1 is the market version
+
+Alternatively, you can find the full list of available resource types here.
+https://cloud.google.com/deployment-manager/docs/configuration/supported-resource-types
+
+To get a list of all available instance resource types in Google Cloud, run the following command in Cloud Shell:
+
+gcloud deployment-manager types list | grep instance
+
+The output should look like this:
+
+...
+compute.v1.instance
+compute.alpha.instance
+
+To get a list of all available firewall rule resource types in Google Cloud, run the following command in Cloud Shell:
+
+gcloud deployment-manager types list | grep firewall
+
+The output should look like this:
+
+compute.v1.firewall
+compute.alpha.firewall
+compute.beta.firewall
+
+Tip 3:
+
+In config.yaml, add the following properties for the firewall rule:
+
+  network: $(ref.mynetwork.selfLink)
+  sourceRanges: ["0.0.0.0/0"]
+  allowed:
+  - IPProtocol: TCP
+    ports: [22, 80, 3389]
+  - IPProtocol: ICMP
+
+Because firewall rules depend on their network, you are using the $(ref.mynetwork.selfLink) reference to instruct Deployment Manager to resolve these resources in a dependent order. Specifically, the network is created before the firewall rule. By default, Deployment Manager creates all resources in parallel, so there is no guarantee that dependent resources are created in the correct order unless you use references.
+
+Tip 4:
+# define instance template
+
+resources:
+- name: {{ env["name"] }}
+  type: compute.v1.instance  
+  properties:
+     machineType: zones/{{ properties["zone"] }}/machineTypes/{{ properties["machineType"] }}
+     zone: {{ properties["zone"] }}
+     networkInterfaces:
+      - network: {{ properties["network"] }}
+        subnetwork: {{ properties["subnetwork"] }}
+        accessConfigs:
+        - name: External NAT
+          type: ONE_TO_ONE_NAT
+     disks:
+      - deviceName: {{ env["name"] }}
+        type: PERSISTENT
+        boot: true
+        autoDelete: true
+        initializeParams:
+          sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-9
+
+{{ env["name"] }} is an environment variable that will be provided by the configuration so that you can reuse the template for multiple instances.
+
+Most properties are defined as template properties, which you will provide values for from the top-level configuration (config.yaml).
+
+Tip 5:
+
+imports:
+- path: instance-template.jinja
+
+The import statement defines the template that you want to use in your configuration. You can import multiple templates in one configuration. For example, you could create templates for the firewall rule and networks if you want to reuse those.
+
+Tip 6:
+
+student_02_5494a60976d0@cloudshell:~/dminfra (qwiklabs-gcp-02-8ec61246fdd4)$ pwd
+/home/student_02_5494a60976d0/dminfra
+student_02_5494a60976d0@cloudshell:~/dminfra (qwiklabs-gcp-02-8ec61246fdd4)$ ls
+config.yaml  instance-template.jinja
+
+# preview before deploy
+student_02_5494a60976d0@cloudshell:~/dminfra (qwiklabs-gcp-02-8ec61246fdd4)$ gcloud deployment-manager deployments create dminfra --config=config.yaml --preview
+The fingerprint of the deployment is b'TwRk-eg6XyftUlbRRF5ysA=='
+Waiting for create [operation-1604546611851-5b3539ed330a0-2b6fd801-a727d4af]...done.                                                          
+Create operation operation-1604546611851-5b3539ed330a0-2b6fd801-a727d4af completed successfully.
+NAME                               TYPE                 STATE       ERRORS  INTENT
+mynet-eu-vm                        compute.v1.instance  IN_PREVIEW  []      CREATE_OR_ACQUIRE
+mynet-us-vm                        compute.v1.instance  IN_PREVIEW  []      CREATE_OR_ACQUIRE
+mynetwork                          compute.v1.network   IN_PREVIEW  []      CREATE_OR_ACQUIRE
+mynetwork-allow-http-ssh-rdp-icmp  compute.v1.firewall  IN_PREVIEW  []      CREATE_OR_ACQUIRE
+
+# deploy
+student_02_5494a60976d0@cloudshell:~/dminfra (qwiklabs-gcp-02-8ec61246fdd4)$ gcloud deployment-manager deployments update dminfra
+The fingerprint of the deployment is b'53qTEHdbK83ZPk7jejNeyQ=='
+Waiting for update [operation-1604546669331-5b353a24043b3-3232d2e7-fecdb20e]...done.                                                          
+Update operation operation-1604546669331-5b353a24043b3-3232d2e7-fecdb20e completed successfully.
+NAME                               TYPE                 STATE      ERRORS  INTENT
+mynet-eu-vm                        compute.v1.instance  COMPLETED  []
+mynet-us-vm                        compute.v1.instance  COMPLETED  []
+mynetwork                          compute.v1.network   COMPLETED  []
+mynetwork-allow-http-ssh-rdp-icmp  compute.v1.firewall  COMPLETED  []
+
+The update command commits the preview. If you don't preview a configuration, you can directly run the following command:
+
+gcloud deployment-manager deployments create dminfra --config=config.yaml
+
+# troubleshooting
+If something goes wrong with the preview or creation of the deployment, try to use the error messages to troubleshoot the source of the issue. You must delete the Deployment Manager configuration before you can try deploying it again. This can be achieved with this command in Cloud Shell:
+
+gcloud deployment-manager deployments delete dminfra
