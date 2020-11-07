@@ -1,0 +1,168 @@
+Deploying Apps to Google Cloud
+
+https://www.coursera.org/learn/cloud-infrastructure-design-process/gradedLti/Akxsb/lab-deploying-apps-to-google-cloud
+
+Overview
+In this lab, you will deploy applications to the Google Cloud services App Engine, Kubernetes Engine, and Cloud Run.
+
+939a3b87fa9ebca5.png
+
+Objectives
+In this lab, you will learn how to perform the following tasks:
+
+Download a sample app from GitHub
+
+Deploy to App Engine
+
+Deploy to Kubernetes Engine
+
+Deploy to Cloud Run
+
+Setup: copy the application code from Github, test run it locally
+
+git clone https://GitHub.com/GoogleCloudPlatform/training-data-analyst.git
+sudo pip3 install -r requirements.txt
+python3 main.py
+
+------------------------------------------------------------------------
+1. Deploy to App Engine
+App Engine is a completely automated deployment platform. It supports many languages, including Python, Java, JavaScript, and Go. To use it, you create a configuration file and deploy your applications with a couple of simple commands. In this task, you create a file named app.yaml and deploy it to App Engine.
+
+# edit config file
+# There are other settings you can add to the app.yaml file, but in this case only the language runtime is required.
+
+app.yaml
+
+runtime: python37
+
+# create an App Engine application
+gcloud app create --region=us-central
+
+# deploy the app
+gcloud app deploy --version=one --quiet
+
+# By default, the URL to an App Engine application is in the form of https://project-id.appspot.com.
+https://qwiklabs-gcp-00-920eef95c0e5.appspot.com/
+
+2. Make change to the app, deploy the new version to App Engine
+
+gcloud app deploy --version=two --no-promote --quiet
+
+# The --no-promote parameter tells App Engine to continue serving requests with the old version. This allows you to test the new version before putting it into production.
+
+3. Migrata the production traffic to version two 
+
+# select "Split Traffic" at the top from App Engine -> Versions
+
+------------------------------------------------------------------------
+
+Deploy to Kubernetes Engine
+
+# To deploy an application to Kubernetes, you first need to create the cluster. Then you need to add a configuration file for each application you will deploy to the cluster.
+
+1. create the k8s cluster
+# connect the cloud shell to cluster, by click "Connect" or run
+gcloud container clusters get-credentials c
+luster-1 --zone us-central1-c --project qwiklabs-gcp-00-920eef95c0e5
+
+# test the connection
+student_00_67dbe2910e0c@cloudshell:~/gcp-course/training-data-analyst/courses/design-process/deploying-apps-to-gcp (qwiklabs-gcp-00-920eef95c0e5)$ kubectl get nodes
+NAME                                       STATUS   ROLES    AGE     VERSION
+gke-cluster-1-default-pool-c0799f82-3xr5   Ready    <none>   2m38s   v1.16.13-gke.401
+gke-cluster-1-default-pool-c0799f82-d9xs   Ready    <none>   2m37s   v1.16.13-gke.401
+gke-cluster-1-default-pool-c0799f82-v8kk   Ready    <none>   2m37s   v1.16.13-gke.401
+
+2. build the docker image and make the k8s config file
+
+kubernetes-config.yaml
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-deployment
+  labels:
+    app: devops
+    tier: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: devops
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: devops
+        tier: frontend
+    spec:
+      containers:
+      - name: devops-demo
+        image: <YOUR IMAGE PATH HERE>
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-deployment-lb
+  labels:
+    app: devops
+    tier: frontend-lb
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: devops
+    tier: frontend
+
+In the first section of the YAML file above, you are configuring a deployment. In this case, you are deploying 3 instances of your Python web app. Notice the image attribute. You will update this value with your image in a minute after you build it.In the second section, you are configuring a service of the type "load balancer." The load balancer will have a public IP address. Users will access your application through the load balancer.
+
+For more information on Kubernetes deployments and services, see the links below:
+
+https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/
+
+# get image for kubenetes config
+# build the image
+cd ~/gcp-course/training-data-analyst/courses/design-process/deploying-apps-to-gcp
+gcloud builds submit --tag gcr.io/$DEVSHELL_PROJECT_ID/devops-image:v0.2 .
+
+# get the image info, update in the k8s config file
+image: gcr.io/qwiklabs-gcp-00-920eef95c0e5/devops-image:v0.2
+
+3. deploy
+kubectl apply -f kubernetes-config.yaml
+
+4. verify 
+
+# verify 3 replicas/instances are created
+student_00_67dbe2910e0c@cloudshell:~/gcp-course/training-data-analyst/courses/design-process/deploying-apps-to-gcp (qwiklabs-gcp-00-920eef95c0e5)$ kubectl get pods
+NAME                                 READY   STATUS              RESTARTS   AGE
+devops-deployment-7ddbc9b586-mpsrw   0/1     ContainerCreating   0          16s
+devops-deployment-7ddbc9b586-qtvjz   0/1     ContainerCreating   0          16s
+devops-deployment-7ddbc9b586-rqht9   0/1     ContainerCreating   0          16s
+
+# verify load balancer is created
+student_00_67dbe2910e0c@cloudshell:~/gcp-course/training-data-analyst/courses/design-process/deploying-apps-to-gcp (qwiklabs-gcp-00-920eef95c0e5)$ kubectl get services
+NAME                   TYPE           CLUSTER-IP   EXTERNAL-IP     PORT(S)        AGE
+devops-deployment-lb   LoadBalancer   10.8.3.14    35.225.120.94   80:30647/TCP   75s
+kubernetes             ClusterIP      10.8.0.1     <none>          443/TCP        12m
+
+------------------------------------------------------------------------
+
+Deploy to Cloud Run
+
+# Cloud Run simplifies and automates deployments to Kubernetes. When you use Cloud Run, you don't need a configuration file. You simply choose a cluster for your application. With Cloud Run, you can use a cluster managed by Google, or you can use your own Kubernetes cluster.
+
+# To use Cloud Run, your application needs to be deployed using a Docker image and it must be stateless.
+
+1. build the docker image, upload the image
+
+cd ~/gcp-course/training-data-analyst/courses/design-process/deploying-apps-to-gcp
+gcloud builds submit --tag gcr.io/$DEVSHELL_PROJECT_ID/cloud-run-image:v0.1 .
+
+2. create a service in Cloud Run, later URL is generated from GUI
