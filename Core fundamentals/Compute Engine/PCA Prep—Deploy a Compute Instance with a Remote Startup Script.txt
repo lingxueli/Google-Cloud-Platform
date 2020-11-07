@@ -1,0 +1,56 @@
+PCA Prep - Deploy a Compute Instance with a Remote Startup Script
+
+https://googlecoursera.qwiklabs.com/focuses/12307163?parent=lti_session
+
+Topics tested
+Create a storage bucket for startup scripts.
+
+Create a virtual machine that runs a startup script from cloud storage.
+
+Configure HTTP access for the virtual machine.
+
+Deploy an application on an instance.
+
+Challenge scenario
+You have been given the responsibility of managing the configuration of your organization's Google Cloud virtual machines. You have decided to make some changes to the framework used for managing the deployment and configuration machines - you want to make it easier to modify the startup scripts used to initialize a number of the compute instances. Instead of storing startup scripts directly in the instances metadata, you have decided to store the scripts in a Cloud Storage bucket and then configure the virtual machines to point to the relevant script file in the bucket.
+
+A basic bash script that installs the Apache web server software called install-web.sh has been provided for you as a sample startup script. You can download this from the Student Resources links on the left side of the page.
+
+Your challenge
+
+Configure a Linux Google Compute Engine instance that installs the Apache web server software using a remote startup script. In order to confirm that Apache has successfully installed, the Compute Engine instance must be accessible via HTTP from the internet.
+
+Tips and Tricks
+Configure Instance Metadata. The Running Startup Scripts documentation page explains how Compute Engine instance metadata can be used to configure startup scripts.
+
+Check if your Compute Engine instance is executing the startup script. Use the Serial Console for the running virtual machine to look at the startup events to make sure that the startup script is being executed.
+
+Check permissions. Your Compute Engine instance might not have the correct permissions required to read the startup-script from the storage bucket. The virtual machine needs to be given permissions that align with the storage permissions.
+
+Check firewalls. If the startup script has installed the software you may be unable to connect if a firewall has not been correctly configured.
+Check the URL and address. You will be unable to connect to the Apache web server if you are trying to access the Compute Engine instance using an https address rather than http or you are using the incorrect IP address. Check that your URL is http://[EXTERNAL_IP] rather than https://[EXTERNAL_IP] or http://[INTERNAL_IP]
+
+# environment
+student_00_a3130271d8cc@cloudshell:~ (qwiklabs-gcp-00-85bb98f6a6e5)$ ls
+README-cloudshell.txt  resources-install-web.sh
+
+student_00_a3130271d8cc@cloudshell:~ (qwiklabs-gcp-00-85bb98f6a6e5)$ echo $DEVSHELL_PROJECT_ID
+qwiklabs-gcp-00-85bb98f6a6e5
+
+
+1. upload the start-up script to cloud storage and allow public access
+
+# create the bucket with name $DEVSHELL_PROJECT_ID before execute this
+gsutil cp resources-install-web.sh gs://$DEVSHELL_PROJECT_ID
+
+# edit the permission
+# allow public read access for "allUsers"
+
+# now the file can be pulic accessed from 
+# https://storage.googleapis.com/qwiklabs-gcp-00-85bb98f6a6e5/resources-install-web.sh
+
+2. use instance metadata to configure startup scripts
+key=startup-script-url
+value=https://storage.googleapis.com/qwiklabs-gcp-00-85bb98f6a6e5/resources-install-web.sh
+
+3. Now you can access the webpage at http://34.69.129.51/

@@ -39,7 +39,7 @@ student_04_8f526425268d@cloudshell:~/echo-web (qwiklabs-gcp-04-a983b6ff3427)$ do
 
 3. build the container image, test and publish to the cloud registry
 docker build -t echo-app:v2 .                                                                                   
-docker tag echo-app:v2 gcr.io/$DEVSHELL_PROJECT_ID/echo-app:v2                                                  
+docker tag echo-app:v2 gcr.io/$DEVSHELL_PROJECT_ID/echo-app:v2
 docker push gcr.io/$DEVSHELL_PROJECT_ID/echo-app:v2
 
 
