@@ -1,0 +1,144 @@
+Monitoring Applications in Google Cloud
+
+Overview
+In this lab, you will deploy an application to Google Cloud and then use the tools provided by Google Cloud to monitor it. You will use Cloud Logging, Trace, Profiler, and dashboards and create uptime checks and alerting policies.
+
+Objectives
+In this lab, you will learn how to perform the following tasks:
+
+Download a sample app from Github
+Deploy an application to App Engine
+Examine the Cloud logs
+View Profiler information
+Explore Cloud Trace
+Monitor resources using dashboards
+Create uptime checks and alerts
+
+1. clone the project, add monitoring Profiler to the code
+
+#Profiler allows you to monitor the resources your applications use. For more information, see https://cloud.google.com/profiler/docs/.
+
+main.py
+
+import googlecloudprofiler
+
+try:
+    googlecloudprofiler.start(verbose=3)
+except (ValueError, NotImplementedError) as exc:
+    print(exc)
+
+# This code simply turns Profiler on. Once on, Profiler starts reporting application metrics to Google Cloud
+
+requirements.txt
+
+google-cloud-profiler
+
+# enable profiler from Google Cloud Shell
+
+gcloud services enable cloudprofiler.googleapis.com
+
+2. test the application code
+sudo pip3 install -r requirements.txt
+python3 main.py
+
+
+3. Deploy an application to App Engine
+
+app.yaml
+
+runtime: python37
+
+# create the app engine application
+gcloud app create --region=us-central
+# deploy the app
+gcloud app deploy --version=one --quiet
+
+# verify the service is running from URL
+
+4. Examine the Cloud logs
+
+App Engine > Versions > Diagnose (column of the table): Tool > Logs
+
+5. View Profiler information
+
+Navigation menu > Profiler
+
+# The gray bar at the top represents the total amount of CPU time used by the program. The bars below that represent the amount of CPU time used by the program's functions relative to the total. 
+
+# At this point, there is no traffic, so the chart is not very interesting. Throw some load at the application.
+
+Navigation menu > Compute Engine > Create a VM in another region, accept other setting as default
+
+Generate some traffic to your App Engine app using the web testing tool called Apache Bench
+
+# install Apache Bench on the VM
+sudo apt update
+sudo apt install apache2-utils -y
+
+# Generate the traffic from VM to App Engine app
+# The command will make a thousand requests, 10 at a time, to your application.
+# ab -n 1000 -c 10 https://<your-project-id>.appspot.com/
+student-00-c049c08c1f2c@instance-1:~$ ab -n 1000 -c 10 https://qwiklabs-gcp-00-96a9b6e96ed8.appspot.com/
+
+# You have to change the URL to point to your application. Recall that you can find the URL in the App Engine Dashboard. It is also on the browser tab you used to test your app, if you haven't closed it. 
+# Also, make sure you insert a slash (/) at the end of the URL.
+
+# Now there is a more interesting chart. Each bar represents a function. The width of the bars represents how much CPU time each function consumed.
+
+# The Profiler is a way developers can track down parts of a program that are consuming too many resources.
+
+6. Explore Cloud Trace
+
+# Every request to your application is added to the Trace list
+
+Navigation menu > Trace
+
+# The overview screen shows recent requests and allows you to create reports to analyze traffic. Because your program is new and has only one page, it's not very interesting, but in a real app there would be lots of useful information.
+
+> Trace list
+
+# This shows a history of requests and their latency. Again, it's not very exciting because the application hasn't been running for very long. The chart in the upper-left plots requests and how long they took. The table to the right shows a list of requests. If you select a request, more detail will be displayed at the bottom of the screen.
+
+# return to the VM ssh session
+# generate the traffic using Apache Bench; Repeat this a couple of times; Observe Trace
+student-00-c049c08c1f2c@instance-1:~$ ab -n 1000 -c 10 https://qwiklabs-gcp-00-96a9b6e96ed8.appspot.com/
+
+7. Monitor resources using Dashboards
+
+Navigation menu > Monitoring
+
+> Dashboards
+
+# Cloud Monitoring analyzes the resources used in your projects and generates some default dashboards for you. In this exercise you have used App Engine and Compute Engine virtual machines, so a table similar to the one shown below should be displayed
+
+> App Engine dashboard
+
+A dashboard of pertinent information for your App Engine application will appear.
+
+> GCE instances dashboard
+
+A dashboard for your VM will appear.
+
+> Create Dashboard
+
+create a custom dashboard
+
+8. Create uptime checks and alerts
+
+Navigation menu > Monitoring > Uptime checks > Create Uptime Check
+
+Title: App Engine Uptime Check
+Check Type: HTTPS
+Resource Type: URL
+Hostname: <your-project-id>.appspot.com
+Path: /
+Check every	1 minute
+
+click Test
+Responded with "200 (OK)" in 3,337 ms.
+
+click Save
+
+App Engine Uptime Check > Add Alerting Policy
+
+> Add Notification channel > Add your email in noticication channel
