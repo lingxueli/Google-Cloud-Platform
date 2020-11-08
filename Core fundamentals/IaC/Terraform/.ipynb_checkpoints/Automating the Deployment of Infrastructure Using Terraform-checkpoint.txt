@@ -1,0 +1,173 @@
+Automating the Deployment of Infrastructure Using Terraform
+
+Overview
+Terraform enables you to safely and predictably create, change, and improve infrastructure. It is an open-source tool that codifies APIs into declarative configuration files that can be shared among team members, treated as code, edited, reviewed, and versioned.
+
+In this lab, you create a Terraform configuration with a module to automate the deployment of Google Cloud infrastructure. Specifically, you deploy one auto mode network with a firewall rule and two VM instances, as shown in this diagram:
+
+Objectives
+In this lab, you learn how to perform the following tasks:
+
+Create a configuration for an auto mode network
+
+Create a configuration for a firewall rule
+
+Create a module for VM instances
+
+Create and deploy a configuration
+
+Verify the deployment of a configuration
+
+https://www.coursera.org/learn/gcp-infrastructure-scaling-automation/gradedLti/DY2aS/lab-automating-the-infrastructure-of-networks-using-terraform
+
+Task 1. Set up Terraform and Cloud Shell
+Configure your Cloud Shell environment to use Terraform.
+
+Install Terraform
+# To confirm that Terraform is installed, run the following command:
+terraform --version
+# To create a directory for your Terraform configuration, run the following command:
+mkdir tfinfra
+
+Initialize Terraform
+Terraform uses a plugin-based architecture to support the numerous infrastructure and service providers available. Each "provider" is its own encapsulated binary distributed separately from Terraform itself. Initialize Terraform by setting Google as the provider.
+
+# provider.tf
+provider "google" {}
+
+# To initialize Terraform, run the following command:
+cd tfinfra
+terraform init
+
+Task 2. Create mynetwork and its resources
+# Create the auto mode network mynetwork along with its firewall rule and two VM instances (mynet_us_vm and mynet_eu_vm).
+
+# mynetwork.tf
+# Create the mynetwork network
+resource [RESOURCE_TYPE] "mynetwork" {
+name = [RESOURCE_NAME]
+#RESOURCE properties go here
+}
+
+# This base template is a great starting point for any Google Cloud resource. The name field allows you to name the resource, and the type field allows you to specify the Google Cloud resource that you want to create. You can also define properties, but these are optional for some resources.
+
+# In mynetwork.tf, replace [RESOURCE_TYPE] with "google_compute_network" (with the quotes).
+# The google_compute_network resource is a VPC network. Available resources are in the Google Cloud provider documentation.
+https://registry.terraform.io/providers/hashicorp/google/latest/docs
+# For more information about this specific resource, see the Terraform documentation.
+https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network
+
+# In mynetwork.tf, replace [RESOURCE_NAME] with "mynetwork" (with the quotes).
+
+# Add the following property to mynetwork.tf:
+auto_create_subnetworks = "true"
+
+# By definition, an auto mode network automatically creates a subnetwork in each region. Therefore, you are setting auto_create_subnetworks to true.
+
+# Verify that mynetwork.tf looks like this:
+
+# Create the mynetwork network
+resource "google_compute_network" "mynetwork" {
+name                    = "mynetwork"
+auto_create_subnetworks = true
+}
+
+# Configure the firewall rule
+# Define a firewall rule to allow HTTP, SSH, RDP, and ICMP traffic on mynetwork.
+
+# Add the following base code to mynetwork.tf:
+
+# Add a firewall rule to allow HTTP, SSH, RDP and ICMP traffic on mynetwork
+resource "google_compute_firewall" "mynetwork-allow-http-ssh-rdp-icmp" {
+name = "mynetwork-allow-http-ssh-rdp-icmp"
+network = google_compute_network.mynetwork.self_link
+allow {
+    protocol = "tcp"
+    ports    = ["22", "80", "3389"]
+    }
+allow {
+    protocol = "icmp"
+    }
+}
+
+# Because this firewall rule depends on its network, you are using the google_compute_network.mynetwork.self_link reference to instruct Terraform to resolve these resources in a dependent order. In this case, the network is created before the firewall rule.
+
+# Configure the VM instance
+# Define the VM instances by creating a VM instance module. A module is a reusable configuration inside a folder. You will use this module for both VM instances of this lab.
+
+
+# Because you will be using this module for both VM instances, you are defining the instance name as an input variable. This allows you to control the name of the variable from mynetwork.tf. For more information about input variables, see this guide.
+
+  zone         = "${var.instance_zone}"
+  machine_type = "${var.instance_type}"
+
+# These properties define the zone and machine type of the instance as input variables.
+
+  network_interface {
+    network = "${var.instance_network}"
+    access_config {
+      # Allocate a one-to-one NAT IP to the instance
+    }
+  }
+
+# This property defines the network interface by providing the network name as an input variable and the access configuration. Leaving the access configuration empty results in an ephemeral external IP address (required in this lab). To create instances with only an internal IP address, remove the access_config section. For more information, see the Terraform documentation. https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance
+
+# Define the 4 input variables at the top of main.tf
+
+variable "instance_name" {}
+variable "instance_zone" {}
+variable "instance_type" {
+  default = "n1-standard-1"
+  }
+variable "instance_network" {}
+
+# By giving instance_type a default value, you make the variable optional. The instance_name, instance_zone, and instance_network are required, and you will define them in mynetwork.tf.
+
+# Add the following VM instances to mynetwork.tf:
+
+# Create the mynet-us-vm instance
+module "mynet-us-vm" {
+  source           = "./instance"
+  instance_name    = "mynet-us-vm"
+  instance_zone    = "us-central1-a"
+  instance_network = google_compute_network.mynetwork.self_link
+}
+
+# Create the mynet-eu-vm" instance
+module "mynet-eu-vm" {
+  source           = "./instance"
+  instance_name    = "mynet-eu-vm"
+  instance_zone    = "europe-west1-d"
+  instance_network = google_compute_network.mynetwork.self_link
+}
+
+# These resources are leveraging the module in the instance folder and provide the name, zone, and network as inputs. Because these instances depend on a VPC network, you are using the google_compute_network.mynetwork.self_link reference to instruct Terraform to resolve these resources in a dependent order. In this case, the network is created before the instance.
+
+# The benefit of writing a Terraform module is that it can be reused across many configurations. Instead of writing your own module, you can also leverage existing modules from the Terraform Module registry.
+https://registry.terraform.io/browse?provider=google&verified=true
+
+Create mynetwork and its resources
+# It's time to apply the mynetwork configuration.
+
+# To rewrite the Terraform configuration files to a canonical format and style, run the following command:
+
+terraform fmt
+
+# To initialize Terraform, run the following command:
+
+terraform init
+
+# To create an execution plan, run the following command:
+
+terraform plan
+
+# Terraform determined that 4 resources need to be added.
+
+# To apply the desired changes, run the following command:
+
+terraform apply
+
+
+
+
+
