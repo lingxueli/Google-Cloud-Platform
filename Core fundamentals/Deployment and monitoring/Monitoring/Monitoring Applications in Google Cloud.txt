@@ -14,7 +14,9 @@ Explore Cloud Trace
 Monitor resources using dashboards
 Create uptime checks and alerts
 
-1. clone the project, add monitoring Profiler to the code
+https://www.coursera.org/learn/cloud-infrastructure-design-process/gradedLti/M4LWm/lab-monitoring-applications-in-google-cloud
+
+1. Download the project; Add monitoring Profiler to the code
 
 #Profiler allows you to monitor the resources your applications use. For more information, see https://cloud.google.com/profiler/docs/.
 
@@ -142,3 +144,23 @@ click Save
 App Engine Uptime Check > Add Alerting Policy
 
 > Add Notification channel > Add your email in noticication channel
+
+# Disable the application to see whether your uptime check and alerting policy 
+
+Navigation menu > App Engine > Settings > Disable application
+
+# test the app URL. It shouldn't work anymore
+
+Monitoring > click Uptime checks
+
+# uptime check failed
+
+> Alerting
+
+# An incident should have been fired
+# Check your email. You should get a message from Cloud Monitoring
+
+# Return to App Engine Settings and re-enable your application
+# The uptime check should be working again. 
+# Alerting page. Your incident should be resolved
+# Check your email again. You should get a second email indicating that the alert recovered

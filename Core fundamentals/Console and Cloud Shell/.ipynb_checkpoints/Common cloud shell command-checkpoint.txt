@@ -1,0 +1,145 @@
+use the gsutil command to create a bucket.
+# use the gsutil command to create a bucket
+gsutil mb gs://$MY_BUCKET_NAME_2
+
+# execute the following command to list all the zones in a given region
+gcloud compute zones list | grep $MY_REGION
+
+# Set this zone to be your default zone by executing the following command.
+gcloud config set compute/zone $MY_ZONE
+
+# Create a VM in the default zone using the new environment variable to assign the VM name.
+gcloud compute instances create $MY_VMNAME \
+--machine-type "n1-standard-1" \
+--image-project "debian-cloud" \
+--image-family "debian-9" \
+--subnet "default"
+
+# List the virtual machine instances in your project.
+gcloud compute instances list
+
+# execute the following command to create a new service account
+gcloud iam service-accounts create test-service-account2 --display-name "test-service-account2"
+
+# execute the following command to grant the second service account the Project viewer role:
+gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT --member serviceAccount:test-service-account2@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com --role roles/viewer
+
+# Copy a picture of a cat from a Google-provided Cloud Storage bucket to your Cloud Shell.
+gsutil cp gs://cloud-training/ak8s/cat.jpg cat.jpg
+# Copy the file from the first bucket into the second bucket
+gsutil cp gs://$MY_BUCKET_NAME_1/cat.jpg gs://$MY_BUCKET_NAME_2/cat.jpg
+
+# To get the default access list that's been assigned to cat.jpg (when you uploaded it to your Cloud Storage bucket), execute the following two commands:
+gsutil acl get gs://$MY_BUCKET_NAME_1/cat.jpg  > acl.txt
+cat acl.txt
+
+# Output
+
+[
+  {
+    "entity": "project-owners-560255523887",
+    "projectTeam": {
+      "projectNumber": "560255523887",
+      "team": "owners"
+    },
+gsutil cp gs://cloud-training/ak8s/cat.jpg cat.jpg    "role": "OWNER"
+  },
+  {
+    "entity": "project-editors-560255523887",
+    "projectTeam": {
+      "projectNumber": "560255523887",
+      "team": "editors"
+    },
+    "role": "OWNER"
+  },
+  {
+    "entity": "project-viewers-560255523887",
+    "projectTeam": {
+      "projectNumber": "560255523887",
+      "team": "viewers"
+    },
+    "role": "READER"
+  },
+  {
+    "email": "google12345678_student@qwiklabs.net",
+    "entity": "user-google12345678_student@qwiklabs.net",
+    "role": "OWNER"
+  }
+]
+# This output shows that anyone with a Project Owner, Editor, or Viewer role for the project has access (Owner access for Owners/Editors and Reader access for Viewers).
+
+# To change the object to have private access, execute the following command:
+gsutil acl set private gs://$MY_BUCKET_NAME_1/cat.jpg
+# To verify the new ACL that's been assigned to cat.jpg, execute the following two commands:
+gsutil acl get gs://$MY_BUCKET_NAME_1/cat.jpg  > acl-2.txt
+cat acl-2.txt
+
+# Output
+
+[
+  {
+    "email": "google12345678_student@qwiklabs.net",
+    "entity": "user-google12345678_student@qwiklabs.net",
+    "role": "OWNER"
+  }
+]
+
+# execute the following command to view the current configuration:
+
+gcloud config list
+
+# Output
+[component_manager]
+disable_update_check = True
+[compute]
+gce_metadata_read_timeout_sec = 5
+zone = us-central1-a
+[core]
+account = google12345678_student@qwiklabs.net
+disable_usage_reporting = False
+project = qwiklabs-Google Cloud-1aeffbc5d0acb416
+[metrics]
+environment = devshell
+
+Your active configuration is: [cloudshell-16441]
+
+# execute the following command to change the authenticated user to the first service account (which you created in an earlier task) through the credentials that you downloaded to your local machine and then uploaded into Cloud Shell (credentials.json).
+gcloud auth activate-service-account --key-file credentials.json
+
+# To verify the active account, execute the following command:
+gcloud config list
+
+# Output 
+[component_manager]
+disable_update_check = True
+[compute]
+gce_metadata_read_timeout_sec = 5
+zone = us-central1-a
+[core]
+account = test-service-account@qwiklabs-Google Cloud-1aeffbc5d0acb416.iam.gserviceaccount.com
+disable_usage_reporting = False
+project = qwiklabs-Google Cloud-1aeffbc5d0acb416
+[metrics]
+environment = devshell
+
+Your active configuration is: [cloudshell-16441]
+
+# To verify the list of authorized accounts in Cloud Shell, execute the following command:
+gcloud auth list
+
+# To switch to the lab account, execute the following command.
+# You replace [USERNAME] with the username provided in the Qwiklabs Connection Details pane on the left of the lab instructions page. .
+gcloud config set account [USERNAME]
+
+# Make the first Cloud Storage bucket readable by everyone, including unauthenticated users.
+gsutil iam ch allUsers:objectViewer gs://$MY_BUCKET_NAME_1
+
+# install nginx
+sudo apt-get update
+sudo apt-get install nginx
+
+# In your Cloud Shell window, copy the HTML file you created using the Code Editor to your virtual machine:
+gcloud compute scp index.html first-vm:index.nginx-debian.html --zone=us-central1-c
+
+# In the SSH login window for your VM, copy the HTML file from your home directory to the document root of the nginx Web server:
+sudo cp index.nginx-debian.html /var/www/html
