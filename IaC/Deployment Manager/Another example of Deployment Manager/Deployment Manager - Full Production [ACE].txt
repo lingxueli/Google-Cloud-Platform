@@ -1,0 +1,410 @@
+Deployment Manager - Full Production [ACE]
+
+Overview
+In this lab, you will launch a service using an infrastructure orchestration tool called Deployment Manager and monitor the service using Cloud Monitoring. In Cloud Monitoring, you will set up basic black box monitoring with a Cloud Monitoring dashboard and establish an Uptime Check (alert notification) to trigger incident response.
+
+More specifically, you will:
+
+Install and configure an advanced deployment using Deployment Manager sample templates.
+Enable Cloud monitoring.
+Configure Cloud Monitoring Uptime Checks and notifications.
+Configure a Cloud Monitoring dashboard with two charts, one showing CPU usage and the other ingress traffic.
+Perform a load test and simulate a service outage.
+
+Cloud Monitoring provides visibility into the performance, uptime, and overall health of cloud-powered applications. Cloud Monitoring collects metrics, events, and metadata from Google Cloud Platform, Amazon Web Services, hosted uptime probes, application instrumentation, and a variety of common application components including Cassandra, Nginx, Apache Web Server, Elasticsearch, and many others. Cloud Monitoring ingests that data and generates insights via dashboards, charts, and alerts. Cloud Monitoring alerting helps you collaborate by integrating with Slack, PagerDuty, HipChat, Campfire, and more.
+
+Objectives
+In this lab, you will learn to:
+
+Launch a cloud service from a collection of templates.
+
+Configure basic black box monitoring of an application.
+
+Create an uptime check to recognize a loss of service.
+
+Establish an alerting policy to trigger incident response procedures.
+
+Create and configure a dashboard with dynamically updated charts.
+
+Test the monitoring and alerting regimen by applying a load to the service.
+
+Test the monitoring and alerting regimen by simulating a service outage.
+
+Activate Google Cloud Shell
+
+You can list the active account name with this command:
+gcloud auth list
+
+You can list the project ID with this command:
+
+gcloud config list project
+
+Create a virtual environment
+sudo apt-get update
+sudo apt-get install virtualenv
+virtualenv -p python3 venv
+source venv/bin/activate
+
+Clone the Deployment Manager Sample Templates
+mkdir ~/dmsamples
+cd ~/dmsamples
+git clone https://github.com/GoogleCloudPlatform/deploymentmanager-samples.git
+
+Explore the Sample Files
+cd ~/dmsamples/deploymentmanager-samples/examples/v2
+
+(venv) student_02_aed026b62eb8@cloudshell:~/dmsamples/deploymentmanager-samples/examples/v2 (qwiklabs-gcp-02-a6a9e58e9e4f)$ ls
+access_context_manager  cloud_router   custom_machine_type  iam              internal_lb          project_creation  sqladmin            vm_with_disks
+access_control          cloudsql       dataproc             iam_custom_role  internal_lb_haproxy  quick_start       ssl                 vpn_auto_subnet
+build_configuration     common         gke                  igm-updater      metadata_from_file   regional_igm      step_by_step_guide  waiter
+cloud_functions         container_igm  ha-service           image_based_igm  nodejs               saltstack         template_modules
+cloudkms                container_vm   htcondor             instance_pool    nodejs_l7            single_vm         vm_startup_script
+
+Not all of the subdirectories are independent projects. For example, the directory named common contains templates that are used by several of the other projects. If you are studying independently later, use the README files as a guides.
+
+The nodejs directory contains everything you'll need to build this lab. Note that there is a nodejs directory and a nodejs_l7directory. Use nodejs.
+
+List and examine the Nodejs deployment
+cd nodejs/python
+(venv) student_02_aed026b62eb8@cloudshell:~/dmsamples/deploymentmanager-samples/examples/v2/nodejs/python (qwiklabs-gcp-02-a6a9e58e9e4f)$ ls
+frontend.py  frontend.py.schema  nodejs.py  nodejs.py.schema  nodejs.yaml
+
+The main deployment manager configuration file is nodejs.yaml. It makes use of templates to generate infrastructure. The rest of the files are templates. Templates use variables defined in the nodejs.yaml configuration file to produce customized results.
+
+(venv) student_02_aed026b62eb8@cloudshell:~/dmsamples/deploymentmanager-samples/examples/v2/common/python (qwiklabs-gcp-02-a6a9e58e9e4f)$ ls
+container_helper.py  container_instance_template.py  container_instance_template.py.schema  container_vm.py  container_vm.py.schema
+
+frontend.py
+
+frontend.py includes frontend.py.schema, which creates an instance template based on container_instance_template.py. This template is used to create a managed instance group and an autoscaler. The template also creates a network load balancer that has a forwarding rule with a single public IP address. It will also create:
+
+A target pool that refers to the managed instance group.
+
+A health check attached to the target pool.
+
+nodejs.py
+
+nodejs.py includes nodejs.py.schema, which brings the frontend and backend templates together.
+
+Note that the frontend is frontend.py.
+
+The backend is /common/python/container_vm.py.
+
+This is a VM running a Docker container with MySQL, so it doesn't require a custom template.
+
+Other files
+/common/python/container_instance_template.py
+
+/common/python/container_vm.py
+
+/common/python/container_helper.py
+
+Customize the Deployment
+Now that you've downloaded and reviewed the nodejs Deployment Manager template, let's start customizing the deployment.
+
+Specify the zone
+
+Enter the following command to open the list of zones:
+
+gcloud compute zones list
+
+Copy the name of a zone for the configuration file to use.
+
+nodejs.yaml
+
+resources:
+- name: nodejs
+  type: nodejs.py
+  properties:
+    zone: ZONE_TO_RUN
+    
+resources:
+- name: nodejs
+  type: nodejs.py
+  properties:
+    zone: us-east1-d
+
+Modify the maximum number of instances in the instance group
+
+Edit the nodejs.py file.
+
+def GenerateConfig(context):
+  """Generate configuration."""
+
+  backend = context.env['deployment'] + '-backend'
+  frontend = context.env['deployment'] + '-frontend'
+  firewall = context.env['deployment'] + '-application-fw'
+  application_port = 8080
+  mysql_port = 8080
+  resources = [{
+      'name': backend,
+      'type': 'container_vm.py',
+      'properties': {
+          'zone': context.properties['zone'],
+          'dockerImage': 'gcr.io/deployment-manager-examples/mysql',
+          'containerImage': 'family/cos-stable',
+          'port': mysql_port
+      }
+  }, {
+      'name': frontend,
+      'type': 'frontend.py',
+      'properties': {
+          'zone': context.properties['zone'],
+          'dockerImage': 'gcr.io/deployment-manager-examples/nodejsservice',
+          'port': application_port,
+          # Define the variables that are exposed to container as env variables.
+          'dockerEnv': {
+              'SEVEN_SERVICE_MYSQL_PORT': mysql_port,
+              'SEVEN_SERVICE_PROXY_HOST': '$(ref.' + backend
+                                          + '.networkInterfaces[0].networkIP)'
+          },
+          # If left out will default to 1
+          'size': 2,
+          # If left out will default to 1
+          'maxSize': 20
+      }
+  }, {
+      'name': firewall,
+      'type': 'compute.v1.firewall',
+      'properties': {
+          'allowed': [{
+              'IPProtocol': 'TCP',
+              'ports': [application_port]
+          }],
+          'sourceRanges': ['0.0.0.0/0']
+      }
+  }]
+  return {'resources': resources}
+
+Modify the maxSize 20 and set it to 4
+
+Run the Application
+
+Now you'll use Deployment Manager to deploy the application and make it operational. This builds the infrastructure, but it won't allow traffic. After Deployment Manager sets up the infrastructure, you can apply service labels.
+
+Deploy the application
+Enter this command to name the application advanced-configuration and pass Deployment Manager the configuration file (nodejs.yaml).
+
+gcloud deployment-manager deployments create advanced-configuration --config nodejs.yaml
+
+(venv) student_02_aed026b62eb8@cloudshell:~/dmsamples/deploymentmanager-samples/examples/v2/nodejs/python (qwiklabs-gcp-02-a6a9e58e9e4f)$ gcloud deployment-manager deployments create advance
+d-configuration --config nodejs.yaml
+The fingerprint of the deployment is b'psdfi8cVLrgP2Hu9i1zrzg=='
+Waiting for create [operation-1604961874438-5b3b44e676a24-daec6e85-b86ed620]...done.
+Create operation operation-1604961874438-5b3b44e676a24-daec6e85-b86ed620 completed successfully.
+NAME                                   TYPE                             STATE      ERRORS  INTENT
+advanced-configuration-application-fw  compute.v1.firewall              COMPLETED  []
+advanced-configuration-backend         compute.v1.instance              COMPLETED  []
+advanced-configuration-frontend-as     compute.v1.autoscaler            COMPLETED  []
+advanced-configuration-frontend-hc     compute.v1.httpHealthCheck       COMPLETED  []
+advanced-configuration-frontend-igm    compute.v1.instanceGroupManager  COMPLETED  []
+advanced-configuration-frontend-it     compute.v1.instanceTemplate      COMPLETED  []
+advanced-configuration-frontend-lb     compute.v1.forwardingRule        COMPLETED  []
+advanced-configuration-frontend-tp     compute.v1.targetPool            COMPLETED  []
+
+Compute Engine > Instance groups > advanced-configuration-frontend-igm > Details
+You'll see maxSize has been set to 4.
+
+Verify that the application is operational
+
+The application takes a few minutes to start. You can view it in the Deployment Manager part of Cloud Console (Navigation menu > Deployment Manager), or you can see the instances in the Compute Engine part of Console (Navigation menu > Compute Engine > VM).
+
+To verify that the application is running, you will open a browser to access port 8080 and view the service. Since the IP address was established dynamically when the Deployment Manager implemented the global forwarding rule (specified in the template), you'll need to find that address to test the application.
+
+Find the global load balancer forwarding rule IP address
+
+Enter the following command in the Cloud Command Line to find your forwarding IP address.
+
+gcloud compute forwarding-rules list
+
+(venv) student_02_aed026b62eb8@cloudshell:~/dmsamples/deploymentmanager-samples/examples/v2/nodejs/python (qwiklabs-gcp-02-a6a9e58e9e4f)$ gcloud compute forwarding-rules list
+NAME                                REGION    IP_ADDRESS     IP_PROTOCOL  TARGET
+advanced-configuration-frontend-lb  us-east1  35.190.144.79  TCP          us-east1/targetPools/advanced-configuration-frontend-tp
+
+Open a new window in your browser. In the address field, enter the following URL, replacing <your IP address> with your forwarding IP address:
+
+http://35.190.144.79:8080
+
+You will see a blank page, with your own IP address.
+
+It may take several minutes for the service to become operational. If you get an error, such as a 404, wait about two minutes and try again.
+
+Now enter log information by entering a log message in your browser address line.
+
+http://35.190.144.79:8080/?msg=<enter_a_message>
+http://35.190.144.79:8080/?msg=hi
+
+After you enter the log, the browser returns added.
+
+View the log by going to http://35.190.144.79:8080
+
+Go ahead and create more logs and see them at http://<your IP address>:8080.
+
+Create a Monitoring workspace
+
+You will now setup a Monitoring workspace that's tied to your Qwiklabs GCP Project. The following steps create a new account that has a free trial of Monitoring.
+
+In the Google Cloud Platform Console, click on Navigation menu > Monitoring.
+
+Wait for your workspace to be provisioned.
+
+When the Monitoring dashboard opens, your workspace is ready.
+
+Configure an uptime check and alert policy in Cloud Monitoring
+
+Now that Cloud Monitoring is running, you'll set up alerts and a dashboard.
+
+Configure an uptime check
+
+In the Cloud Monitoring tab, click on Uptime Checks > Create Uptime Check.
+
+Specify the following:
+
+Property	Value
+Title	Check1
+Check Type	TCP
+Resource Type	URL
+Hostname	<your forwarding address>
+Port	8080
+Response content contains the text	<leave blank>
+Check every	1 minute
+
+Click Test to test the check
+
+Responded with "SUCCESS" in 117 ms.
+
+If the test fails, make sure that the service is still working. Also check to see that the firewall rule exists and is correct.
+
+After the test succeeds, click Save.
+
+After the Uptime Check is saved, Cloud Monitoring offers to create an alerting policy. Click on No, Thanks.
+
+Configure an alerting policy and notification
+
+Alerting > Create Policy
+
+Name the policy as Test.
+
+Click on Add Condition.
+
+For Find resource type and metric, select GCE VM Instance.
+
+For Metrics, select a metric you are interested in evaluating, such as CPU usage or CPU utilization.
+
+For Condition, select is above.
+
+Specify the threshold value and for how long the metric must cross this set value before the alert is triggered. For example, for THRESHOLD, type 20 and set FOR to 1 minute.
+
+Click Add.
+
+In Notifications, click on Add Notification Channel select Notification Channel type as "Email" and add your personal email. Then Click Add.
+
+In a later step, you will trigger an event that will notify you via email.
+
+Click Save.
+
+Configure a Dashboard with a Couple of Useful Charts
+
+Configure a dashboard
+
+On the Cloud Monitoring window or tab, click on Dashboards > Create Dashboard
+
+Give the New Dashboard Name as DMDash. Then Click Confirm.
+
+Click on Add Chart.
+
+Configure the chart as follows:
+
+Property	Value
+Title	Sample
+Resource type	GCE VM Instance
+Metric Type	CPU Usage
+
+Click Save.
+
+Click on Add Chart to add another chart to the dashboard with the following properties:
+
+Property	Value
+Title	Sample2
+Resource type	GCE VM Instance
+Metric Type	Sent Bytes
+
+Click Save
+
+Create a test VM with ApacheBench
+
+Now that you've configured monitoring for traffic in a specified region, see if it works. You'll install and use ApacheBench to apply 3 levels of load to the service and then view the Cloud Monitoring Dashboard you've set up.
+
+Create a VM
+Compute Engine > VM instances > Create instance, use all the default settings in the Create an instance dialog
+
+Install ApacheBench
+
+sudo apt-get update
+sudo apt-get -y install apache2-utils
+
+Apply and monitor load
+
+Now you'll use ApacheBench to apply load to the service. Watch the DMDash dashboard in Cloud Monitoring to monitor the CPU usage and the Network Inbound Traffic. You'll also be able to track the number of instances in Cloud Monitoring by mousing over the lines, or by viewing the instances in the Cloud Console (Navigation menu > Compute Engine > VM).
+
+In the SSH window, enter this command for ApacheBench to apply load to the service. Run the following command two or three times to create traffic.
+
+ab -n 1000 -c 100 http://<Your_IP>:8080/
+ab -n 1000 -c 100 http://35.190.144.79:8080/
+
+Wait a few minutes, then increase the load to 5000.
+Run this command two or three times to create traffic:
+
+ab -n 5000 -c 100 http://<Your_IP>:8080/
+ab -n 5000 -c 100 http://35.190.144.79:8080/
+
+Run this command two or three times to create traffic:
+
+ab -n 10000 -c 100 http://<Your_IP>:8080/
+ab -n 10000 -c 100 http://35.190.144.79:8080/
+
+Now see what happens when you lower the CPU usage per instance.
+
+In the cloud console, click Navigation menu > Compute Engine > Instance groups.
+'
+Click on the name of your instance group, then Edit Group.
+
+Click on pencil icon of CPU utilization. Change the Target CPU utilization to 20 then click Done.
+
+Click Save.
+
+The target CPU usage is the total value of the CPU usage for all VMs in the instance group. This controls when autoscaling occurs. In production you would usually have this set to at least 60%. For this exercise you will set it temporarily to 20% to make it quicker to examine autoscaling.
+
+Run this command two or three times to create traffic:
+
+ab -n 10000 -c 100 http://<Your_IP>:8080/
+ab -n 10000 -c 100 http://35.190.144.79:8080/
+
+Expected behavior: The load consumed more than 20% of the cumulative CPU in the group, triggering autoscaling. A new instance was started.
+
+Now see what happens when you turn autoscaling off.
+
+Go to Compute Engine > Instance groups.
+Click the name of your instance group, then Edit Group.
+Change Autoscaling mode to Don't autoscale.
+Click Save.
+
+Wait a few minutes, then run this command two or three times to create traffic:
+
+ab -n 10000 -c 100 http://<Your_IP>:8080/
+ab -n 10000 -c 100 http://35.190.144.79:8080/
+
+Expected behavior: With autoscaling off, no new instances are created, cumulative CPU usage increases.
+
+Results
+There will be a lag time of around 5 minutes before you see changes in the Cloud Monitoring Dashboard.
+
+Simulate a Service Outage
+
+To simulate an outage, remove the firewall.
+
+Click Navigation menu > VPC Networks > Firewall rules.
+
+Check the box next to tcp:8080 protocols / ports, then click Delete at the top of the page. Click Delete again to confirm.
+
+You will receive a notification email in 15 to 30 minutes. (make sure your email is listed in the notification channel of uptime health check alert.
